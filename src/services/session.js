@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { config } from '../config/env.js';
+import { sanitizeRedirectPath } from '../config/roles.js';
 
 const SESSION_COOKIE_NAME = 'labfis_session';
 const OAUTH_STATE_COOKIE_NAME = 'labfis_oauth_state';
@@ -129,10 +130,16 @@ export function clearSessionCookie(res) {
 }
 
 /**
- * Store a signed OAuth CSRF state cookie for the Google authorization flow.
+ * Store a signed OAuth CSRF state cookie along with the sanitized post-login redirect path.
  */
-export function setOAuthStateCookie(res, state) {
-  const token = signToken({ state }, OAUTH_STATE_TTL_SECONDS);
+export function setOAuthStateCookie(res, state, nextPath = '/') {
+  const token = signToken(
+    {
+      state,
+      next: sanitizeRedirectPath(nextPath),
+    },
+    OAUTH_STATE_TTL_SECONDS
+  );
   res.cookie(OAUTH_STATE_COOKIE_NAME, token, {
     ...COOKIE_BASE_OPTIONS,
     maxAge: OAUTH_STATE_TTL_SECONDS * 1000,
@@ -148,5 +155,12 @@ export function consumeOAuthStateCookie(req, res) {
   res.clearCookie(OAUTH_STATE_COOKIE_NAME, COOKIE_BASE_OPTIONS);
 
   const payload = verifyToken(token);
-  return typeof payload?.state === 'string' ? payload.state : null;
+  if (typeof payload?.state !== 'string') {
+    return null;
+  }
+
+  return {
+    state: payload.state,
+    next: sanitizeRedirectPath(payload.next),
+  };
 }

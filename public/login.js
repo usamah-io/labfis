@@ -11,6 +11,22 @@
   const toastEl = document.getElementById('toast');
   const toastMessageEl = document.getElementById('toast-message');
 
+  function getSafeNextPath() {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get('next');
+    if (
+      typeof raw === 'string' &&
+      raw.startsWith('/') &&
+      !raw.startsWith('//') &&
+      !raw.startsWith('/login') &&
+      !raw.includes('\\')
+    ) {
+      return raw;
+    }
+    return '/';
+  }
+
+  const safeNextPath = getSafeNextPath();
   let toastTimer = null;
 
   function showToast(message) {
@@ -50,7 +66,11 @@
       if (googleBtnText) {
         googleBtnText.textContent = 'Menghubungkan ke Google...';
       }
-      window.location.assign('/auth/google');
+      const target =
+        safeNextPath !== '/'
+          ? `/auth/google?next=${encodeURIComponent(safeNextPath)}`
+          : '/auth/google';
+      window.location.assign(target);
     });
   }
 
@@ -89,7 +109,11 @@
             'Content-Type': 'application/json',
           },
           credentials: 'same-origin',
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify({
+            email,
+            password,
+            next: safeNextPath,
+          }),
         });
 
         const data = await response.json().catch(() => null);
@@ -100,7 +124,7 @@
           return;
         }
 
-        window.location.assign(data.redirect || '/dashboard');
+        window.location.assign(data.redirect || safeNextPath || '/');
       } catch {
         showToast('Terjadi gangguan koneksi ke server LabFis.');
         submitBtn.disabled = false;
@@ -118,6 +142,13 @@
       google_failed: 'Gagal masuk dengan akun Google. Silakan coba lagi.',
     };
     showToast(errorMessages[errorCode] || 'Autentikasi gagal. Silakan coba lagi.');
-    window.history.replaceState({}, document.title, window.location.pathname);
+    queryParams.delete('error');
+    const qs = queryParams.toString();
+    const cleaned = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    window.history.replaceState({}, document.title, cleaned);
+  }
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
   }
 })();

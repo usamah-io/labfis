@@ -15,7 +15,7 @@ export const config = {
   sessionSecret: (process.env.SESSION_SECRET || '').trim() || crypto.randomBytes(32).toString('hex'),
   googleClientId: (process.env.GOOGLE_CLIENT_ID || '').trim(),
   googleClientSecret: (process.env.GOOGLE_CLIENT_SECRET || '').trim(),
-  googleRedirectUri: (process.env.GOOGLE_REDIRECT_URI || `${appUrl}/auth/google/callback`).trim(),
+  googleRedirectUri: (process.env.GOOGLE_REDIRECT_URI || `${appUrl}/auth/callback/google`).trim(),
   gmailUser,
   gmailAppPassword,
   gmailAppPasswordNormalized: gmailAppPassword.replace(/\s+/g, ''),

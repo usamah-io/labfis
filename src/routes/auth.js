@@ -1,20 +1,20 @@
 import crypto from 'node:crypto';
 import { Router } from 'express';
 import { config } from '../config/env.js';
+import { sanitizeRedirectPath, SUPER_ADMIN_EMAIL } from '../config/roles.js';
 import {
   buildGoogleAuthUrl,
   exchangeCodeForTokens,
   fetchGoogleUserProfile,
 } from '../services/googleAuth.js';
-import { isGmailConfigured, sendLoginNotification } from '../services/mailer.js';
+import { isGmailConfigured } from '../services/mailer.js';
 import {
   clearSessionCookie,
   consumeOAuthStateCookie,
-  getSessionUser,
   setOAuthStateCookie,
   setSessionCookie,
 } from '../services/session.js';
-import { authenticateUser } from '../services/userStore.js';
+import { authenticateUser, upsertGoogleUser } from '../services/userStore.js';
 
 const router = Router();
 
@@ -32,62 +32,60 @@ function statesMatch(receivedState, expectedState) {
 
 router.get('/auth/google', (req, res) => {
   if (!config.googleClientId || !config.googleClientSecret) {
-    return res.redirect('/?error=google_failed');
+    return res.redirect('/login?error=google_failed');
   }
 
+  const nextPath = sanitizeRedirectPath(req.query.next);
   const state = crypto.randomBytes(24).toString('hex');
-  setOAuthStateCookie(res, state);
+  setOAuthStateCookie(res, state, nextPath);
   return res.redirect(buildGoogleAuthUrl(state));
 });
 
-router.get('/auth/google/callback', async (req, res) => {
-  const expectedState = consumeOAuthStateCookie(req, res);
+async function handleGoogleCallback(req, res) {
+  const consumed = consumeOAuthStateCookie(req, res);
 
   if (req.query.error) {
-    return res.redirect('/?error=google_cancelled');
+    return res.redirect('/login?error=google_cancelled');
   }
 
   const code = typeof req.query.code === 'string' ? req.query.code : '';
   const state = typeof req.query.state === 'string' ? req.query.state : '';
 
-  if (!code || !statesMatch(state, expectedState)) {
-    return res.redirect('/?error=invalid_state');
+  if (!code || !consumed || !statesMatch(state, consumed.state)) {
+    return res.redirect('/login?error=invalid_state');
   }
 
   try {
     const tokens = await exchangeCodeForTokens(code);
     const profile = await fetchGoogleUserProfile(tokens.access_token);
+    const dbUser = upsertGoogleUser(profile);
 
     const sessionUser = {
-      email: profile.email,
-      name: profile.name,
-      picture: profile.picture,
-      role: 'Pengguna Google',
+      id: dbUser.id,
+      email: dbUser.email,
+      name: dbUser.name,
+      role: dbUser.role,
+      roleLabel: dbUser.roleLabel,
+      picture: dbUser.picture,
       provider: 'google',
       loginAt: new Date().toISOString(),
     };
 
     setSessionCookie(res, sessionUser);
-
-    sendLoginNotification({
-      to: sessionUser.email,
-      name: sessionUser.name,
-      provider: sessionUser.provider,
-      loginAt: sessionUser.loginAt,
-    }).catch((err) => {
-      console.error('[LabFis Mailer] Error tak terduga:', err?.message || err);
-    });
-
-    return res.redirect('/dashboard');
+    return res.redirect(consumed.next || '/');
   } catch (error) {
     console.error('[LabFis Auth] Google OAuth callback error:', error?.message || error);
-    return res.redirect('/?error=google_failed');
+    return res.redirect('/login?error=google_failed');
   }
-});
+}
+
+router.get('/auth/callback/google', handleGoogleCallback);
+router.get('/auth/google/callback', handleGoogleCallback);
 
 router.post('/api/auth/login', (req, res) => {
   const email = typeof req.body?.email === 'string' ? req.body.email.trim() : '';
   const password = typeof req.body?.password === 'string' ? req.body.password : '';
+  const nextPath = sanitizeRedirectPath(req.body?.next);
 
   if (!email || !password) {
     return res.status(400).json({
@@ -105,39 +103,30 @@ router.post('/api/auth/login', (req, res) => {
   }
 
   const sessionUser = {
-    ...user,
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    roleLabel: user.roleLabel,
+    picture: user.picture,
     provider: 'email',
     loginAt: new Date().toISOString(),
   };
 
   setSessionCookie(res, sessionUser);
 
-  sendLoginNotification({
-    to: sessionUser.email,
-    name: sessionUser.name,
-    provider: sessionUser.provider,
-    loginAt: sessionUser.loginAt,
-  }).catch((err) => {
-    console.error('[LabFis Mailer] Error tak terduga:', err?.message || err);
-  });
-
   return res.status(200).json({
     ok: true,
-    redirect: '/dashboard',
+    redirect: nextPath,
     user: sessionUser,
     gmailConfigured: isGmailConfigured(),
   });
 });
 
 router.get('/api/auth/me', (req, res) => {
-  const user = getSessionUser(req);
-  if (!user) {
-    return res.status(401).json({ authenticated: false });
-  }
-
   return res.status(200).json({
-    authenticated: true,
-    user,
+    authenticated: Boolean(req.user),
+    user: req.user || null,
     gmailConfigured: isGmailConfigured(),
   });
 });
@@ -152,6 +141,7 @@ router.get('/api/health', (req, res) => {
     ok: true,
     googleOAuthConfigured: Boolean(config.googleClientId && config.googleClientSecret),
     gmailConfigured: isGmailConfigured(),
+    superAdminEmail: SUPER_ADMIN_EMAIL,
   });
 });
 

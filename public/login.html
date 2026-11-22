@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Masuk ke LabFis — Sistem Manajemen Laboratorium Fisika</title>
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#059669" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="LabFis" />
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="mesh-bg" aria-hidden="true">
+      <div class="mesh-orb mesh-orb-1"></div>
+      <div class="mesh-orb mesh-orb-2"></div>
+      <div class="mesh-orb mesh-orb-3"></div>
+      <div class="mesh-orb mesh-orb-4"></div>
+      <div class="mesh-grain"></div>
+    </div>
+
+    <div id="toast" class="toast" role="alert" aria-live="polite" hidden>
+      <svg
+        class="toast-icon"
+        viewBox="0 0 20 20"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <circle cx="10" cy="10" r="8" />
+        <line x1="10" y1="6.5" x2="10" y2="10.5" />
+        <circle cx="10" cy="13.5" r="0.6" fill="currentColor" stroke="none" />
+      </svg>
+      <span id="toast-message"></span>
+    </div>
+
+    <main class="login-shell">
+      <section class="login-card" aria-labelledby="login-title">
+        <header class="card-header">
+          <div class="brand">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 36 36" fill="none">
+                <ellipse
+                  cx="18"
+                  cy="18"
+                  rx="12.5"
+                  ry="5.2"
+                  transform="rotate(35 18 18)"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                />
+                <ellipse
+                  cx="18"
+                  cy="18"
+                  rx="12.5"
+                  ry="5.2"
+                  transform="rotate(-35 18 18)"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-opacity="0.7"
+                />
+                <circle cx="18" cy="18" r="2.75" fill="currentColor" />
+              </svg>
+            </span>
+            <span class="brand-name">Lab<span>Fis</span></span>
+          </div>
+          <h1 id="login-title" class="card-title">Masuk ke LabFis</h1>
+          <p class="card-subtitle">Sistem Manajemen Laboratorium Fisika</p>
+        </header>
+
+        <button type="button" id="google-login-btn" class="btn-google">
+          <svg class="google-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="#4285F4"
+              d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 24c3.3 0 6.08-1.09 8.1-2.96l-3.88-3.05c-1.09.73-2.48 1.16-4.22 1.16-3.24 0-5.99-2.19-6.97-5.13H1.02v3.14C3.03 21.15 7.21 24 12 24Z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.03 14.02A7.18 7.18 0 0 1 4.65 12c0-.7.13-1.38.38-2.02V6.84H1.02A11.99 11.99 0 0 0 0 12c0 1.94.46 3.77 1.02 5.16l4.01-3.14Z"
+            />
+            <path
+              fill="#EA4335"
+              d="M12 4.75c1.8 0 3.41.62 4.68 1.84l3.51-3.51C18.07 1.19 15.3 0 12 0 7.21 0 3.03 2.85 1.02 6.84l4.01 3.14c.98-2.94 3.73-5.23 6.97-5.23Z"
+            />
+          </svg>
+          <span id="google-btn-text">Masuk dengan Google</span>
+        </button>
+
+        <div class="divider" role="separator">
+          <span>atau masuk dengan email</span>
+        </div>
+
+        <form id="login-form" class="login-form" novalidate>
+          <div class="field">
+            <label for="email">Email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autocomplete="email"
+              placeholder="nama@email.com"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="password-wrap">
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                placeholder="Masukkan password"
+                required
+              />
+              <button
+                type="button"
+                id="toggle-password"
+                class="password-toggle"
+                aria-label="Tampilkan password"
+                aria-pressed="false"
+              >
+                <svg
+                  id="icon-eye"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg
+                  id="icon-eye-off"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  hidden
+                >
+                  <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49" />
+                  <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" />
+                  <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143" />
+                  <path d="m2 2 20 20" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" id="submit-btn" class="btn-primary">Masuk</button>
+        </form>
+      </section>
+    </main>
+
+    <script src="/login.js" defer></script>
+  </body>
+</html>

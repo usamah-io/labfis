@@ -3,7 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Masuk ke LabFis — Sistem Manajemen Laboratorium Fisika</title>
+    <title>LabFis — Sistem Manajemen Laboratorium Fisika</title>
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#059669" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="LabFis" />
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -11,162 +18,661 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/portal.css" />
   </head>
-  <body>
+  <body class="portal-body">
     <div class="mesh-bg" aria-hidden="true">
       <div class="mesh-orb mesh-orb-1"></div>
       <div class="mesh-orb mesh-orb-2"></div>
       <div class="mesh-orb mesh-orb-3"></div>
+      <div class="mesh-orb mesh-orb-4"></div>
       <div class="mesh-grain"></div>
     </div>
 
-    <div id="toast" class="toast" role="alert" aria-live="polite" hidden>
-      <svg
-        class="toast-icon"
-        viewBox="0 0 20 20"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        aria-hidden="true"
-      >
-        <circle cx="10" cy="10" r="8" />
-        <line x1="10" y1="6.5" x2="10" y2="10.5" />
-        <circle cx="10" cy="13.5" r="0.6" fill="currentColor" stroke="none" />
-      </svg>
-      <span id="toast-message"></span>
+    <div id="portal-toast" class="portal-toast" role="status" aria-live="polite" hidden>
+      <div class="portal-toast-content">
+        <strong id="portal-toast-title">Notifikasi</strong>
+        <p id="portal-toast-message"></p>
+      </div>
+      <button type="button" id="portal-toast-close" class="toast-close" aria-label="Tutup notifikasi">
+        &times;
+      </button>
     </div>
 
-    <main class="login-shell">
-      <section class="login-card" aria-labelledby="login-title">
-        <header class="card-header">
-          <div class="brand">
-            <span class="brand-mark" aria-hidden="true">
-              <svg viewBox="0 0 36 36" fill="none">
-                <ellipse
-                  cx="18"
-                  cy="18"
-                  rx="12.5"
-                  ry="5.2"
-                  transform="rotate(35 18 18)"
-                  stroke="currentColor"
-                  stroke-width="1.75"
-                />
-                <ellipse
-                  cx="18"
-                  cy="18"
-                  rx="12.5"
-                  ry="5.2"
-                  transform="rotate(-35 18 18)"
-                  stroke="currentColor"
-                  stroke-width="1.75"
-                  stroke-opacity="0.7"
-                />
-                <circle cx="18" cy="18" r="2.75" fill="currentColor" />
-              </svg>
-            </span>
-            <span class="brand-name">Lab<span>Fis</span></span>
-          </div>
-          <h1 id="login-title" class="card-title">Masuk ke LabFis</h1>
-          <p class="card-subtitle">Sistem Manajemen Laboratorium Fisika</p>
-        </header>
+    <header class="portal-navbar-wrap">
+      <nav class="portal-navbar glass-surface" aria-label="Navigasi utama LabFis">
+        <a href="/" class="nav-brand" data-nav="dashboard">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 36 36" fill="none">
+              <ellipse
+                cx="18"
+                cy="18"
+                rx="12.5"
+                ry="5.2"
+                transform="rotate(35 18 18)"
+                stroke="currentColor"
+                stroke-width="1.75"
+              />
+              <ellipse
+                cx="18"
+                cy="18"
+                rx="12.5"
+                ry="5.2"
+                transform="rotate(-35 18 18)"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-opacity="0.7"
+              />
+              <circle cx="18" cy="18" r="2.75" fill="currentColor" />
+            </svg>
+          </span>
+          <span class="brand-name">Lab<span>Fis</span></span>
+        </a>
 
-        <button type="button" id="google-login-btn" class="btn-google">
-          <svg class="google-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              fill="#4285F4"
-              d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 24c3.3 0 6.08-1.09 8.1-2.96l-3.88-3.05c-1.09.73-2.48 1.16-4.22 1.16-3.24 0-5.99-2.19-6.97-5.13H1.02v3.14C3.03 21.15 7.21 24 12 24Z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.03 14.02A7.18 7.18 0 0 1 4.65 12c0-.7.13-1.38.38-2.02V6.84H1.02A11.99 11.99 0 0 0 0 12c0 1.94.46 3.77 1.02 5.16l4.01-3.14Z"
-            />
-            <path
-              fill="#EA4335"
-              d="M12 4.75c1.8 0 3.41.62 4.68 1.84l3.51-3.51C18.07 1.19 15.3 0 12 0 7.21 0 3.03 2.85 1.02 6.84l4.01 3.14c.98-2.94 3.73-5.23 6.97-5.23Z"
-            />
-          </svg>
-          <span id="google-btn-text">Masuk dengan Google</span>
-        </button>
-
-        <div class="divider" role="separator">
-          <span>atau masuk dengan email</span>
+        <div class="nav-links" role="tablist" aria-label="Menu portal">
+          <button type="button" class="nav-tab is-active" data-tab="dashboard">Dashboard</button>
+          <button type="button" class="nav-tab" data-tab="alat">Inventaris Alat</button>
+          <button type="button" class="nav-tab" data-tab="bahan">Daftar Bahan</button>
+          <button type="button" class="nav-tab nav-tab-accent" data-tab="pinjam" id="nav-pinjam-btn">
+            Pinjam Barang
+          </button>
+          <button type="button" class="nav-tab" data-tab="peminjaman" id="nav-peminjaman-btn" hidden>
+            Peminjaman
+          </button>
+          <button type="button" class="nav-tab" data-tab="users" id="nav-users-btn" hidden>
+            Manajemen Pengguna
+          </button>
+          <button type="button" class="nav-tab" data-tab="profil" id="nav-profil-btn" hidden>
+            Profil
+          </button>
         </div>
 
-        <form id="login-form" class="login-form" novalidate>
-          <div class="field">
-            <label for="email">Email</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autocomplete="email"
-              placeholder="nama@email.com"
-              required
-            />
+        <div class="nav-auth" id="nav-auth">
+          <a href="/login" id="nav-login-link" class="btn-emerald-sm">Masuk</a>
+          <div id="nav-user-box" class="nav-user-box" hidden>
+            <button
+              type="button"
+              id="nav-avatar-btn"
+              class="nav-avatar-btn"
+              aria-label="Buka Halaman Profil"
+              title="Profil Saya"
+            >
+              LF
+            </button>
+            <div class="nav-user-info desktop-only">
+              <span id="nav-user-name" class="nav-user-name">-</span>
+              <span id="nav-user-role" class="role-pill role-user">User</span>
+            </div>
+            <button type="button" id="nav-logout-btn" class="btn-glass-sm desktop-only">
+              Keluar
+            </button>
           </div>
+        </div>
+      </nav>
+    </header>
 
-          <div class="field">
-            <label for="password">Password</label>
-            <div class="password-wrap">
+    <main class="portal-main">
+      <!-- 1. DASHBOARD (PUBLIK) -->
+      <section id="view-dashboard" class="portal-view">
+        <div class="hero-card glass-surface">
+          <div class="hero-text">
+            <span class="hero-eyebrow">Portal Resmi Laboratorium Fisika</span>
+            <h1 class="hero-title">Sistem Manajemen Laboratorium Fisika</h1>
+            <p class="hero-desc">
+              Pantau ketersediaan peralatan dan bahan praktikum secara terbuka. Untuk mengajukan
+              peminjaman alat maupun bahan, silakan masuk terlebih dahulu menggunakan akun Google
+              atau email LabFis Anda.
+            </p>
+          </div>
+          <div class="hero-actions">
+            <button type="button" class="btn-primary hero-cta" id="hero-borrow-btn">
+              Pinjam Barang
+            </button>
+            <button type="button" class="btn-glass" id="hero-browse-alat-btn">
+              Lihat Inventaris
+            </button>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card glass-surface">
+            <span class="stat-label">Jenis Alat Praktikum</span>
+            <strong class="stat-value" id="stat-alat-count">0</strong>
+            <span class="stat-sub">Terbuka untuk publik</span>
+          </article>
+          <article class="stat-card glass-surface">
+            <span class="stat-label">Jenis Bahan Lab</span>
+            <strong class="stat-value" id="stat-bahan-count">0</strong>
+            <span class="stat-sub">Komponen &amp; habis pakai</span>
+          </article>
+          <article class="stat-card glass-surface">
+            <span class="stat-label">Total Stok Tersedia</span>
+            <strong class="stat-value" id="stat-unit-count">0</strong>
+            <span class="stat-sub">Siap dipinjam</span>
+          </article>
+          <article class="stat-card glass-surface">
+            <span class="stat-label">Status Akses Anda</span>
+            <strong class="stat-value stat-value-sm" id="stat-role-label">Pengunjung Publik</strong>
+            <span class="stat-sub" id="stat-role-sub">Login untuk meminjam barang</span>
+          </article>
+        </div>
+
+        <div class="preview-grid">
+          <section class="panel-card glass-surface">
+            <div class="panel-head">
+              <div>
+                <h2 class="panel-title">Ringkasan Inventaris Alat</h2>
+                <p class="panel-sub">Peralatan laboratorium yang tersedia saat ini</p>
+              </div>
+              <button type="button" class="btn-link" data-jump="alat">Lihat Semua</button>
+            </div>
+            <div id="dashboard-alat-preview" class="preview-list"></div>
+          </section>
+
+          <section class="panel-card glass-surface">
+            <div class="panel-head">
+              <div>
+                <h2 class="panel-title">Ringkasan Daftar Bahan</h2>
+                <p class="panel-sub">Bahan penunjang dan komponen habis pakai</p>
+              </div>
+              <button type="button" class="btn-link" data-jump="bahan">Lihat Semua</button>
+            </div>
+            <div id="dashboard-bahan-preview" class="preview-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <!-- 2. INVENTARIS ALAT (PUBLIK + ADMIN/SUPER ADMIN CRUD) -->
+      <section id="view-alat" class="portal-view" hidden>
+        <div class="panel-card glass-surface">
+          <div class="panel-head panel-head-wrap">
+            <div>
+              <h2 class="panel-title">Daftar Inventaris Alat</h2>
+              <p class="panel-sub">
+                Dapat dilihat publik tanpa login. Ketuk kartu atau Pinjam Barang untuk detail &amp; pengajuan.
+              </p>
+            </div>
+            <div class="panel-tools">
               <input
-                id="password"
-                name="password"
-                type="password"
-                autocomplete="current-password"
-                placeholder="Masukkan password"
-                required
+                type="search"
+                id="search-alat"
+                class="search-input"
+                placeholder="Cari nama, kode, atau lokasi alat..."
+                aria-label="Cari inventaris alat"
               />
-              <button
-                type="button"
-                id="toggle-password"
-                class="password-toggle"
-                aria-label="Tampilkan password"
-                aria-pressed="false"
-              >
-                <svg
-                  id="icon-eye"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-                <svg
-                  id="icon-eye-off"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                  hidden
-                >
-                  <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49" />
-                  <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" />
-                  <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143" />
-                  <path d="m2 2 20 20" />
-                </svg>
+              <button type="button" id="add-alat-btn" class="btn-emerald-sm" hidden>
+                + Tambah Alat
               </button>
             </div>
           </div>
 
-          <button type="submit" id="submit-btn" class="btn-primary">Masuk</button>
-        </form>
+          <div class="desktop-table-wrap">
+            <table class="glass-table">
+              <thead>
+                <tr>
+                  <th>Kode</th>
+                  <th>Nama Alat</th>
+                  <th>Kategori &amp; Lokasi</th>
+                  <th>Kondisi</th>
+                  <th>Stok Tersedia</th>
+                  <th class="text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="alat-table-body"></tbody>
+            </table>
+          </div>
+
+          <div id="alat-mobile-grid" class="mobile-card-grid"></div>
+        </div>
+      </section>
+
+      <!-- 3. DAFTAR BAHAN (PUBLIK + ADMIN/SUPER ADMIN CRUD) -->
+      <section id="view-bahan" class="portal-view" hidden>
+        <div class="panel-card glass-surface">
+          <div class="panel-head panel-head-wrap">
+            <div>
+              <h2 class="panel-title">Daftar Bahan Laboratorium</h2>
+              <p class="panel-sub">
+                Dapat dilihat publik tanpa login. Ketuk kartu atau Pinjam Barang untuk detail &amp; permintaan bahan.
+              </p>
+            </div>
+            <div class="panel-tools">
+              <input
+                type="search"
+                id="search-bahan"
+                class="search-input"
+                placeholder="Cari nama, kode, atau kategori bahan..."
+                aria-label="Cari daftar bahan"
+              />
+              <button type="button" id="add-bahan-btn" class="btn-emerald-sm" hidden>
+                + Tambah Bahan
+              </button>
+            </div>
+          </div>
+
+          <div class="desktop-table-wrap">
+            <table class="glass-table">
+              <thead>
+                <tr>
+                  <th>Kode</th>
+                  <th>Nama Bahan</th>
+                  <th>Kategori &amp; Lokasi</th>
+                  <th>Satuan</th>
+                  <th>Stok Tersedia</th>
+                  <th class="text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="bahan-table-body"></tbody>
+            </table>
+          </div>
+
+          <div id="bahan-mobile-grid" class="mobile-card-grid"></div>
+        </div>
+      </section>
+
+      <!-- 4. FORMULIR PEMINJAMAN (WAJIB LOGIN) -->
+      <section id="view-pinjam" class="portal-view" hidden>
+        <div class="panel-card glass-surface form-panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">Formulir Peminjaman Barang</h2>
+              <p class="panel-sub">
+                Pengajuan akan otomatis dikirim melalui email notifikasi ke Super Admin
+                (<code>rafikawahyuni15@gmail.com</code>) dan seluruh Admin.
+              </p>
+            </div>
+          </div>
+
+          <div id="loan-submit-feedback" class="inline-alert" hidden></div>
+
+          <form id="loan-form" class="portal-form" novalidate>
+            <div class="form-grid-2">
+              <div class="field">
+                <label for="loan-name">Nama Lengkap Peminjam</label>
+                <input id="loan-name" type="text" required placeholder="Nama lengkap Anda" />
+              </div>
+              <div class="field">
+                <label for="loan-email">Email Akun</label>
+                <input id="loan-email" type="email" readonly />
+              </div>
+            </div>
+
+            <div class="form-grid-3">
+              <div class="field">
+                <label for="loan-phone">No. HP / WhatsApp</label>
+                <input
+                  id="loan-phone"
+                  type="tel"
+                  required
+                  placeholder="0812xxxxxxxx"
+                />
+              </div>
+              <div class="field">
+                <label for="loan-borrow-date">Tanggal Pinjam</label>
+                <input id="loan-borrow-date" type="date" required />
+              </div>
+              <div class="field">
+                <label for="loan-return-date">Tanggal Kembali</label>
+                <input id="loan-return-date" type="date" required />
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="field-head-row">
+                <label>Daftar Alat / Bahan yang Dipinjam</label>
+                <button type="button" id="add-loan-item-btn" class="btn-glass-sm">
+                  + Tambah Barang
+                </button>
+              </div>
+              <div id="loan-items-container" class="loan-items-container"></div>
+            </div>
+
+            <div class="field">
+              <label for="loan-purpose">Keperluan / Mata Kuliah Praktikum</label>
+              <textarea
+                id="loan-purpose"
+                rows="3"
+                required
+                placeholder="Contoh: Praktikum Fisika Dasar II — Pengukuran Rangkaian RLC"
+              ></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" id="submit-loan-btn" class="btn-primary">
+                Ajukan Peminjaman
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- 5. KELOLA / RIWAYAT PEMINJAMAN (LOGIN REQUIRED) -->
+      <section id="view-peminjaman" class="portal-view" hidden>
+        <div class="panel-card glass-surface">
+          <div class="panel-head panel-head-wrap">
+            <div>
+              <h2 class="panel-title" id="peminjaman-title">Daftar Peminjaman</h2>
+              <p class="panel-sub" id="peminjaman-subtitle">
+                Pantau status pengajuan peminjaman laboratorium Anda.
+              </p>
+            </div>
+            <div id="smtp-test-bar" class="smtp-test-bar" hidden>
+              <span id="smtp-status-badge" class="status-pill status-pending">SMTP</span>
+              <input
+                type="email"
+                id="smtp-test-email"
+                class="search-input smtp-input"
+                placeholder="Email tujuan tes..."
+                aria-label="Email tujuan tes SMTP"
+              />
+              <button type="button" id="smtp-test-btn" class="btn-glass-sm">
+                Tes Kirim Email SMTP
+              </button>
+            </div>
+          </div>
+
+          <div id="loan-status-feedback" class="inline-alert" hidden></div>
+
+          <div id="loan-filter-bar" class="filter-pills" hidden>
+            <button type="button" class="filter-pill is-active" data-loan-filter="all">Semua</button>
+            <button type="button" class="filter-pill" data-loan-filter="pending">Menunggu</button>
+            <button type="button" class="filter-pill" data-loan-filter="approved">Disetujui</button>
+            <button type="button" class="filter-pill" data-loan-filter="delayed">Ditunda</button>
+            <button type="button" class="filter-pill" data-loan-filter="rejected">Ditolak</button>
+          </div>
+
+          <div id="loans-list" class="loans-list"></div>
+        </div>
+      </section>
+
+      <!-- 6. HALAMAN PROFIL (/profil - WAJIB LOGIN) -->
+      <section id="view-profil" class="portal-view" hidden>
+        <div class="profile-hero-card glass-surface">
+          <div class="profile-identity">
+            <div id="profile-avatar" class="profile-avatar-lg" aria-hidden="true">LF</div>
+            <div class="profile-meta-text">
+              <h2 id="profile-name" class="profile-name">-</h2>
+              <p id="profile-email" class="profile-email">-</p>
+              <div class="profile-badges">
+                <span id="profile-role-badge" class="role-pill role-user">User</span>
+                <span id="profile-provider-badge" class="status-pill status-pending">Akun</span>
+              </div>
+            </div>
+          </div>
+          <div class="profile-actions">
+            <button type="button" id="profile-manage-users-btn" class="btn-emerald-sm" hidden>
+              Manajemen Pengguna
+            </button>
+            <button type="button" id="profile-manage-loans-btn" class="btn-glass-sm" hidden>
+              Kelola Peminjaman
+            </button>
+            <button type="button" id="profile-logout-btn" class="btn-danger-sm">
+              Keluar
+            </button>
+          </div>
+        </div>
+
+        <div class="stats-grid" id="profile-loan-stats">
+          <article class="stat-card glass-surface">
+            <span class="stat-label">Total Pengajuan Saya</span>
+            <strong class="stat-value" id="prof-stat-total">0</strong>
+            <span class="stat-sub">Semua riwayat</span>
+          </article>
+          <article class="stat-card glass-surface">
+            <span class="stat-label">Disetujui</span>
+            <strong class="stat-value" id="prof-stat-approved">0</strong>
+            <span class="stat-sub">Siap diambil / aktif</span>
+          </article>
+          <article class="stat-card glass-surface">
+            <span class="stat-label">Menunggu / Ditunda</span>
+            <strong class="stat-value" id="prof-stat-pending">0</strong>
+            <span class="stat-sub">Dalam peninjauan</span>
+          </article>
+          <article class="stat-card glass-surface">
+            <span class="stat-label">Ditolak</span>
+            <strong class="stat-value" id="prof-stat-rejected">0</strong>
+            <span class="stat-sub">Perlu penyesuaian</span>
+          </article>
+        </div>
+
+        <div class="panel-card glass-surface">
+          <div class="panel-head panel-head-wrap">
+            <div>
+              <h2 class="panel-title">Ringkasan Riwayat Peminjaman Saya</h2>
+              <p class="panel-sub">Menampilkan pengajuan peminjaman milik akun Anda.</p>
+            </div>
+            <button type="button" class="btn-emerald-sm" id="profile-new-loan-btn">
+              + Pinjam Barang
+            </button>
+          </div>
+          <div id="profile-loans-list" class="loans-list"></div>
+        </div>
+      </section>
+
+      <!-- 7. MANAJEMEN PENGGUNA (KHUSUS SUPER ADMIN) -->
+      <section id="view-users" class="portal-view" hidden>
+        <div class="panel-card glass-surface">
+          <div class="panel-head panel-head-wrap">
+            <div>
+              <h2 class="panel-title">Manajemen Pengguna</h2>
+              <p class="panel-sub">
+                Khusus <strong>Super Admin</strong>: kelola akun Admin dan User, ubah role, atau hapus pengguna.
+              </p>
+            </div>
+            <div class="user-summary-pills" id="user-summary-pills"></div>
+          </div>
+
+          <form id="create-user-form" class="create-user-card" novalidate>
+            <h3 class="sub-heading">Tambah Pengguna Baru</h3>
+            <div class="create-user-grid">
+              <div class="field">
+                <label for="new-user-name">Nama Lengkap</label>
+                <input id="new-user-name" type="text" required placeholder="Contoh: Siti Rahmawati" />
+              </div>
+              <div class="field">
+                <label for="new-user-email">Email</label>
+                <input id="new-user-email" type="email" required placeholder="nama@gmail.com" />
+              </div>
+              <div class="field">
+                <label for="new-user-role">Role</label>
+                <select id="new-user-role">
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="new-user-password">Password (Opsional untuk Google)</label>
+                <input
+                  id="new-user-password"
+                  type="password"
+                  placeholder="Min. 6 karakter atau kosongkan"
+                />
+              </div>
+            </div>
+            <div class="create-user-actions">
+              <button type="submit" id="create-user-btn" class="btn-emerald-sm">
+                + Tambah Pengguna
+              </button>
+            </div>
+          </form>
+
+          <div class="table-wrap">
+            <table class="glass-table">
+              <thead>
+                <tr>
+                  <th>Nama</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Metode</th>
+                  <th class="text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body"></tbody>
+            </table>
+          </div>
+        </div>
       </section>
     </main>
 
-    <script src="/app.js" defer></script>
+    <!-- FLOATING AUTO-HIDE BOTTOM NAVIGATION BAR (MOBILE ONLY < 768px) -->
+    <nav id="mobile-bottom-nav" class="mobile-bottom-nav glass-surface" aria-label="Navigasi cepat mobile">
+      <button type="button" class="bottom-nav-item is-active" data-tab="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="9" rx="2" />
+          <rect x="14" y="3" width="7" height="5" rx="2" />
+          <rect x="14" y="12" width="7" height="9" rx="2" />
+          <rect x="3" y="16" width="7" height="5" rx="2" />
+        </svg>
+        <span>Dashboard</span>
+      </button>
+      <button type="button" class="bottom-nav-item" data-tab="alat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z" />
+        </svg>
+        <span>Alat</span>
+      </button>
+      <button type="button" class="bottom-nav-item" data-tab="bahan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 3h6" />
+          <path d="M10 3v6l-5 8.5A2 2 0 0 0 6.7 21h10.6a2 2 0 0 0 1.7-3.5L14 9V3" />
+          <path d="M8.5 14h7" />
+        </svg>
+        <span>Bahan</span>
+      </button>
+      <button type="button" class="bottom-nav-item" data-tab="pinjam">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="8" y="2" width="8" height="4" rx="1" />
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+          <path d="M12 11v6" />
+          <path d="M9 14h6" />
+        </svg>
+        <span>Pinjam</span>
+      </button>
+      <button type="button" class="bottom-nav-item" data-tab="profil">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="8" r="4" />
+          <path d="M20 21a8 8 0 0 0-16 0" />
+        </svg>
+        <span>Profil</span>
+      </button>
+    </nav>
+
+    <!-- MODAL DETAIL BARANG (KETIKA KARTU MOBILE / TOMBOL DETAIL DIKLIK) -->
+    <div id="item-detail-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="detail-modal-title" hidden>
+      <div class="modal-card glass-surface">
+        <div class="modal-head">
+          <div>
+            <span id="detail-code" class="code-chip">ALT-001</span>
+            <h3 id="detail-modal-title" class="panel-title" style="margin-top: 8px;">Nama Barang</h3>
+          </div>
+          <button type="button" id="detail-modal-close" class="toast-close" aria-label="Tutup detail">
+            &times;
+          </button>
+        </div>
+
+        <div class="detail-specs-grid">
+          <div class="detail-spec-box">
+            <div class="detail-spec-label">Jenis &amp; Kategori</div>
+            <div id="detail-category" class="detail-spec-value">-</div>
+          </div>
+          <div class="detail-spec-box">
+            <div class="detail-spec-label">Lokasi Penyimpanan</div>
+            <div id="detail-location" class="detail-spec-value">-</div>
+          </div>
+          <div class="detail-spec-box">
+            <div class="detail-spec-label">Kondisi</div>
+            <div id="detail-condition" class="detail-spec-value">-</div>
+          </div>
+          <div class="detail-spec-box">
+            <div class="detail-spec-label">Stok Tersedia</div>
+            <div id="detail-stock" class="detail-spec-value">-</div>
+          </div>
+        </div>
+
+        <div id="detail-description" class="detail-description">-</div>
+
+        <div class="modal-actions">
+          <button type="button" id="detail-edit-btn" class="btn-glass-sm" hidden>Edit</button>
+          <button type="button" id="detail-delete-btn" class="btn-danger-sm" hidden>Hapus</button>
+          <button type="button" id="detail-borrow-btn" class="btn-primary">Pinjam Barang</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL TAMBAH/EDIT INVENTARIS (ADMIN & SUPER ADMIN) -->
+    <div id="item-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="item-modal-title" hidden>
+      <div class="modal-card glass-surface">
+        <div class="modal-head">
+          <h3 id="item-modal-title" class="panel-title">Tambah Barang</h3>
+          <button type="button" id="item-modal-close" class="toast-close" aria-label="Tutup modal">
+            &times;
+          </button>
+        </div>
+
+        <form id="item-modal-form" class="portal-form" novalidate>
+          <input type="hidden" id="item-id" />
+          <div class="form-grid-2">
+            <div class="field">
+              <label for="item-type">Jenis Barang</label>
+              <select id="item-type" required>
+                <option value="alat">Alat</option>
+                <option value="bahan">Bahan</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="item-code">Kode Barang (Opsional)</label>
+              <input id="item-code" type="text" placeholder="Otomatis jika kosong" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="item-name">Nama Barang</label>
+            <input id="item-name" type="text" required placeholder="Nama alat atau bahan" />
+          </div>
+
+          <div class="form-grid-2">
+            <div class="field">
+              <label for="item-category">Kategori</label>
+              <input id="item-category" type="text" placeholder="Contoh: Optika / Elektronika" />
+            </div>
+            <div class="field">
+              <label for="item-location">Lokasi Penyimpanan</label>
+              <input id="item-location" type="text" placeholder="Contoh: Lemari A1" />
+            </div>
+          </div>
+
+          <div class="form-grid-4">
+            <div class="field">
+              <label for="item-condition">Kondisi</label>
+              <input id="item-condition" type="text" value="Baik" />
+            </div>
+            <div class="field">
+              <label for="item-unit">Satuan</label>
+              <input id="item-unit" type="text" value="unit" />
+            </div>
+            <div class="field">
+              <label for="item-total">Total Stok</label>
+              <input id="item-total" type="number" min="0" required value="1" />
+            </div>
+            <div class="field">
+              <label for="item-available">Stok Tersedia</label>
+              <input id="item-available" type="number" min="0" required value="1" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="item-desc">Deskripsi</label>
+            <textarea id="item-desc" rows="2" placeholder="Keterangan singkat"></textarea>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" id="item-modal-cancel" class="btn-glass">Batal</button>
+            <button type="submit" id="item-modal-submit" class="btn-primary">Simpan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="/portal.js" defer></script>
   </body>
 </html>

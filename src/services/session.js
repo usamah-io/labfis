@@ -102,13 +102,28 @@ export function verifyToken(token) {
   }
 }
 
+function isHttpsRequest(req) {
+  if (!req) return false;
+  const forwardedProto = String(req.headers?.['x-forwarded-proto'] || '')
+    .split(',')[0]
+    .trim();
+  return Boolean(req.secure || forwardedProto === 'https');
+}
+
+function getCookieOptions(req) {
+  return {
+    ...COOKIE_BASE_OPTIONS,
+    ...(isHttpsRequest(req) ? { secure: true } : {}),
+  };
+}
+
 /**
  * Issue a signed HttpOnly session cookie for the authenticated user.
  */
-export function setSessionCookie(res, user) {
+export function setSessionCookie(res, user, req) {
   const token = signToken({ user }, SESSION_TTL_SECONDS);
   res.cookie(SESSION_COOKIE_NAME, token, {
-    ...COOKIE_BASE_OPTIONS,
+    ...getCookieOptions(req),
     maxAge: SESSION_TTL_SECONDS * 1000,
   });
 }
@@ -125,14 +140,14 @@ export function getSessionUser(req) {
 /**
  * Clear the active session cookie.
  */
-export function clearSessionCookie(res) {
-  res.clearCookie(SESSION_COOKIE_NAME, COOKIE_BASE_OPTIONS);
+export function clearSessionCookie(res, req) {
+  res.clearCookie(SESSION_COOKIE_NAME, getCookieOptions(req));
 }
 
 /**
  * Store a signed OAuth CSRF state cookie along with the sanitized post-login redirect path.
  */
-export function setOAuthStateCookie(res, state, nextPath = '/') {
+export function setOAuthStateCookie(res, state, nextPath = '/', req) {
   const token = signToken(
     {
       state,
@@ -141,7 +156,7 @@ export function setOAuthStateCookie(res, state, nextPath = '/') {
     OAUTH_STATE_TTL_SECONDS
   );
   res.cookie(OAUTH_STATE_COOKIE_NAME, token, {
-    ...COOKIE_BASE_OPTIONS,
+    ...getCookieOptions(req),
     maxAge: OAUTH_STATE_TTL_SECONDS * 1000,
   });
 }
@@ -152,7 +167,7 @@ export function setOAuthStateCookie(res, state, nextPath = '/') {
 export function consumeOAuthStateCookie(req, res) {
   const cookies = parseCookies(req);
   const token = cookies[OAUTH_STATE_COOKIE_NAME];
-  res.clearCookie(OAUTH_STATE_COOKIE_NAME, COOKIE_BASE_OPTIONS);
+  res.clearCookie(OAUTH_STATE_COOKIE_NAME, getCookieOptions(req));
 
   const payload = verifyToken(token);
   if (typeof payload?.state !== 'string') {

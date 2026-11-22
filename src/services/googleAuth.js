@@ -5,12 +5,37 @@ const GOOGLE_TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
 const GOOGLE_USERINFO_ENDPOINT = 'https://openidconnect.googleapis.com/v1/userinfo';
 
 /**
+ * Resolve the Google OAuth callback URI dynamically from the live request host/proto
+ * so both localhost:3000 and Vercel domains (e.g. https://labfisk.vercel.app) work cleanly.
+ */
+export function resolveGoogleRedirectUri(req) {
+  const forwardedProto = String(req?.headers?.['x-forwarded-proto'] || '')
+    .split(',')[0]
+    .trim();
+  const proto = forwardedProto || req?.protocol || 'http';
+  const forwardedHost = String(req?.headers?.['x-forwarded-host'] || '')
+    .split(',')[0]
+    .trim();
+  const host = forwardedHost || (typeof req?.get === 'function' ? req.get('host') : '');
+
+  if (host) {
+    const origin = `${proto}://${host}`;
+    if (config.googleRedirectUri && config.googleRedirectUri.startsWith(`${origin}/`)) {
+      return config.googleRedirectUri;
+    }
+    return `${origin}/auth/callback/google`;
+  }
+
+  return config.googleRedirectUri;
+}
+
+/**
  * Build the Google OAuth 2.0 authorization URL with CSRF state parameter.
  */
-export function buildGoogleAuthUrl(state) {
+export function buildGoogleAuthUrl(state, redirectUri = config.googleRedirectUri) {
   const params = new URLSearchParams({
     client_id: config.googleClientId,
-    redirect_uri: config.googleRedirectUri,
+    redirect_uri: redirectUri,
     response_type: 'code',
     scope: 'openid email profile',
     state,
@@ -23,12 +48,12 @@ export function buildGoogleAuthUrl(state) {
 /**
  * Exchange an authorization code for Google OAuth tokens.
  */
-export async function exchangeCodeForTokens(code) {
+export async function exchangeCodeForTokens(code, redirectUri = config.googleRedirectUri) {
   const body = new URLSearchParams({
     code,
     client_id: config.googleClientId,
     client_secret: config.googleClientSecret,
-    redirect_uri: config.googleRedirectUri,
+    redirect_uri: redirectUri,
     grant_type: 'authorization_code',
   });
 

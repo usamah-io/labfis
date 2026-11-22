@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="320" y2="220" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#d1fae5" />
+      <stop offset="50%" stop-color="#e0f2fe" />
+      <stop offset="100%" stop-color="#ede9fe" />
+    </linearGradient>
+    <linearGradient id="accent" x1="112" y1="62" x2="208" y2="158" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#0d9488" />
+    </linearGradient>
+  </defs>
+  <rect width="320" height="220" rx="20" fill="url(#bg)" />
+  <rect x="14" y="14" width="292" height="192" rx="16" fill="#ffffff" fill-opacity="0.34" stroke="#ffffff" stroke-opacity="0.65" stroke-width="1.5" />
+  <circle cx="160" cy="100" r="44" fill="#ffffff" fill-opacity="0.55" stroke="#ffffff" stroke-opacity="0.7" stroke-width="1.5" />
+  <ellipse cx="160" cy="100" rx="28" ry="11.5" transform="rotate(35 160 100)" stroke="url(#accent)" stroke-width="3.2" />
+  <ellipse cx="160" cy="100" rx="28" ry="11.5" transform="rotate(-35 160 100)" stroke="url(#accent)" stroke-opacity="0.75" stroke-width="3.2" />
+  <circle cx="160" cy="100" r="6" fill="url(#accent)" />
+  <text x="160" y="172" text-anchor="middle" fill="#0f172a" fill-opacity="0.75" font-family="Plus Jakarta Sans, Segoe UI, sans-serif" font-size="13" font-weight="600">
+    Foto Alat LabFis
+  </text>
+</svg>

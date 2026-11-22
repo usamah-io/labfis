@@ -1,4 +1,4 @@
-const CACHE_NAME = 'labfis-shell-v2';
+const CACHE_NAME = 'labfis-shell-v4';
 
 const PRECACHE_ASSETS = [
   '/',
@@ -11,6 +11,7 @@ const PRECACHE_ASSETS = [
   '/icons/icon-192.png',
   '/icons/icon-512.png',
   '/icons/icon.svg',
+  '/images/alat/placeholder.svg',
 ];
 
 self.addEventListener('install', (event) => {

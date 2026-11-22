@@ -1,5 +1,16 @@
 (() => {
   const SUPER_ADMIN_EMAIL = 'rafikawahyuni15@gmail.com';
+  const DEFAULT_IMAGE = '/images/alat/placeholder.svg';
+  const PHYSICS_CATEGORIES = [
+    'Alat Ukur Dasar',
+    'Mekanika',
+    'Kalor dan Termodinamika',
+    'Fluida',
+    'Listrik dan Magnet',
+    'Gelombang dan Bunyi',
+    'Optik',
+    'Fisika Modern',
+  ];
   const STATUS_LABELS = {
     pending: 'Menunggu',
     approved: 'Disetujui',
@@ -26,24 +37,31 @@
     toastTitle: document.getElementById('portal-toast-title'),
     toastMessage: document.getElementById('portal-toast-message'),
     toastClose: document.getElementById('portal-toast-close'),
-    navTabs: Array.from(document.querySelectorAll('.nav-tab')),
-    bottomNavItems: Array.from(document.querySelectorAll('.bottom-nav-item')),
-    mobileBottomNav: document.getElementById('mobile-bottom-nav'),
-    navPeminjamanBtn: document.getElementById('nav-peminjaman-btn'),
-    navUsersBtn: document.getElementById('nav-users-btn'),
-    navProfilBtn: document.getElementById('nav-profil-btn'),
+    dropdowns: Array.from(document.querySelectorAll('.nav-dropdown')),
+    dropdownInventarisTrigger: document.querySelector('#dropdown-inventaris .nav-dropdown-trigger'),
+    dropdownPeminjamanTrigger: document.querySelector('#dropdown-peminjaman .nav-dropdown-trigger'),
+    dropdownAdmin: document.getElementById('dropdown-admin'),
+    dropdownAdminTrigger: document.querySelector('#dropdown-admin .nav-dropdown-trigger'),
+    navDashboardTab: document.querySelector('.nav-tab[data-tab="dashboard"]'),
+    navRiwayatItem: document.getElementById('nav-riwayat-item'),
+    navKelolaPeminjamanItem: document.getElementById('nav-kelola-peminjaman-item'),
+    navUsersItem: document.getElementById('nav-users-item'),
     navLoginLink: document.getElementById('nav-login-link'),
     navUserBox: document.getElementById('nav-user-box'),
-    navAvatarBtn: document.getElementById('nav-avatar-btn'),
+    navAvatarMobileBtn: document.getElementById('nav-avatar-mobile-btn'),
+    navAvatarDesktop: document.getElementById('nav-avatar-desktop'),
     navUserName: document.getElementById('nav-user-name'),
     navUserRole: document.getElementById('nav-user-role'),
     navLogoutBtn: document.getElementById('nav-logout-btn'),
+    bottomNavItems: Array.from(document.querySelectorAll('.bottom-nav-item')),
+    mobileBottomNav: document.getElementById('mobile-bottom-nav'),
     views: {
       dashboard: document.getElementById('view-dashboard'),
       alat: document.getElementById('view-alat'),
       bahan: document.getElementById('view-bahan'),
       pinjam: document.getElementById('view-pinjam'),
       peminjaman: document.getElementById('view-peminjaman'),
+      'admin-alat': document.getElementById('view-admin-alat'),
       profil: document.getElementById('view-profil'),
       users: document.getElementById('view-users'),
     },
@@ -62,6 +80,11 @@
     bahanBody: document.getElementById('bahan-table-body'),
     alatMobileGrid: document.getElementById('alat-mobile-grid'),
     bahanMobileGrid: document.getElementById('bahan-mobile-grid'),
+    adminFilterType: document.getElementById('admin-filter-type'),
+    adminFilterCategory: document.getElementById('admin-filter-category'),
+    searchAdminAlat: document.getElementById('search-admin-alat'),
+    adminAddItemBtn: document.getElementById('admin-add-item-btn'),
+    adminAlatBody: document.getElementById('admin-alat-table-body'),
     loanForm: document.getElementById('loan-form'),
     loanName: document.getElementById('loan-name'),
     loanEmail: document.getElementById('loan-email'),
@@ -107,6 +130,7 @@
     itemDetailModal: document.getElementById('item-detail-modal'),
     detailCode: document.getElementById('detail-code'),
     detailTitle: document.getElementById('detail-modal-title'),
+    detailPhoto: document.getElementById('detail-photo'),
     detailCategory: document.getElementById('detail-category'),
     detailLocation: document.getElementById('detail-location'),
     detailCondition: document.getElementById('detail-condition'),
@@ -128,6 +152,9 @@
     itemUnit: document.getElementById('item-unit'),
     itemTotal: document.getElementById('item-total'),
     itemAvailable: document.getElementById('item-available'),
+    itemImageUrl: document.getElementById('item-image-url'),
+    itemImageFile: document.getElementById('item-image-file'),
+    itemImagePreview: document.getElementById('item-image-preview'),
     itemDesc: document.getElementById('item-desc'),
     itemModalSubmit: document.getElementById('item-modal-submit'),
   };
@@ -175,6 +202,32 @@
     return el;
   }
 
+  function safeImgSrc(url) {
+    if (
+      typeof url === 'string' &&
+      (url.startsWith('/images/') ||
+        url.startsWith('/api/uploads/') ||
+        url.startsWith('https://'))
+    ) {
+      return url;
+    }
+    return DEFAULT_IMAGE;
+  }
+
+  function createThumbnail(url, alt, className) {
+    const img = document.createElement('img');
+    img.className = className;
+    img.alt = alt || 'Foto alat';
+    img.loading = 'lazy';
+    img.src = safeImgSrc(url);
+    img.addEventListener('error', () => {
+      if (img.getAttribute('src') !== DEFAULT_IMAGE) {
+        img.src = DEFAULT_IMAGE;
+      }
+    });
+    return img;
+  }
+
   function getInitials(name, email) {
     const src = (name || email || 'LF').trim();
     const parts = src.split(/\s+/).filter(Boolean);
@@ -185,6 +238,7 @@
   }
 
   function renderAvatarInto(container, user) {
+    if (!container) return;
     const initials = getInitials(user?.name, user?.email);
     container.textContent = initials;
     if (typeof user?.picture === 'string' && user.picture.startsWith('https://')) {
@@ -238,7 +292,33 @@
     return data;
   }
 
+  /* ===== DROPDOWN CONTROLLER ===== */
+
+  function closeAllDropdowns(exceptId = null) {
+    for (const dd of els.dropdowns) {
+      if (exceptId && dd.id === exceptId) continue;
+      dd.classList.remove('is-open');
+      const trigger = dd.querySelector('[data-dropdown-toggle]');
+      const menu = dd.querySelector('.nav-dropdown-menu');
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+      if (menu) menu.hidden = true;
+    }
+  }
+
+  function toggleDropdown(dropdownId) {
+    const dd = document.getElementById(dropdownId);
+    if (!dd) return;
+    const willOpen = !dd.classList.contains('is-open');
+    closeAllDropdowns(dropdownId);
+    const trigger = dd.querySelector('[data-dropdown-toggle]');
+    const menu = dd.querySelector('.nav-dropdown-menu');
+    dd.classList.toggle('is-open', willOpen);
+    if (trigger) trigger.setAttribute('aria-expanded', String(willOpen));
+    if (menu) menu.hidden = !willOpen;
+  }
+
   function navigateToBorrow(itemId = null) {
+    closeAllDropdowns();
     if (!state.user) {
       const target = itemId
         ? `/pinjam?itemId=${encodeURIComponent(itemId)}`
@@ -267,7 +347,33 @@
     }
   }
 
+  function syncNavActiveStates(tab) {
+    els.navDashboardTab?.classList.toggle('is-active', tab === 'dashboard');
+    els.dropdownInventarisTrigger?.classList.toggle(
+      'is-active',
+      tab === 'alat' || tab === 'bahan'
+    );
+    els.dropdownPeminjamanTrigger?.classList.toggle(
+      'is-active',
+      tab === 'pinjam' || tab === 'peminjaman'
+    );
+    els.dropdownAdminTrigger?.classList.toggle(
+      'is-active',
+      tab === 'admin-alat' || tab === 'users'
+    );
+
+    for (const item of document.querySelectorAll('.nav-dropdown-item[data-tab]')) {
+      item.classList.toggle('is-active', item.dataset.tab === tab);
+    }
+
+    for (const btn of els.bottomNavItems) {
+      btn.classList.toggle('is-active', btn.dataset.tab === tab);
+    }
+  }
+
   function switchTab(tab, options = { updateUrl: true }) {
+    closeAllDropdowns();
+
     if (tab === 'pinjam' && !state.user) {
       window.location.assign('/pinjam');
       return;
@@ -280,18 +386,18 @@
       window.location.assign('/login');
       return;
     }
+    if (tab === 'admin-alat' && !isAdminOrSuper()) {
+      showToast('Akses Ditolak', 'Halaman Kelola Alat hanya untuk Admin & Super Admin.', 'error');
+      return;
+    }
     if (tab === 'users' && !isSuperAdmin()) {
       showToast('Akses Ditolak', 'Halaman Manajemen Pengguna hanya untuk Super Admin.', 'error');
       return;
     }
 
     state.activeTab = tab;
-    for (const btn of els.navTabs) {
-      btn.classList.toggle('is-active', btn.dataset.tab === tab);
-    }
-    for (const btn of els.bottomNavItems) {
-      btn.classList.toggle('is-active', btn.dataset.tab === tab);
-    }
+    syncNavActiveStates(tab);
+
     for (const [key, view] of Object.entries(els.views)) {
       if (view) view.hidden = key !== tab;
     }
@@ -308,6 +414,8 @@
       prepareLoanForm();
     } else if (tab === 'peminjaman') {
       loadLoans();
+    } else if (tab === 'admin-alat') {
+      renderAdminInventoryTable();
     } else if (tab === 'profil') {
       loadProfile();
     } else if (tab === 'users') {
@@ -320,9 +428,10 @@
     if (!user) {
       els.navLoginLink.hidden = false;
       els.navUserBox.hidden = true;
-      els.navPeminjamanBtn.hidden = true;
-      els.navUsersBtn.hidden = true;
-      els.navProfilBtn.hidden = true;
+      els.navRiwayatItem.hidden = true;
+      els.navKelolaPeminjamanItem.hidden = true;
+      els.dropdownAdmin.hidden = true;
+      els.navUsersItem.hidden = true;
       els.addAlatBtn.hidden = true;
       els.addBahanBtn.hidden = true;
       els.statRoleLabel.textContent = 'Pengunjung Publik';
@@ -332,40 +441,39 @@
 
     els.navLoginLink.hidden = true;
     els.navUserBox.hidden = false;
-    renderAvatarInto(els.navAvatarBtn, user);
+    renderAvatarInto(els.navAvatarMobileBtn, user);
+    renderAvatarInto(els.navAvatarDesktop, user);
     els.navUserName.textContent = user.name;
     els.navUserRole.textContent = user.roleLabel || 'User';
     els.navUserRole.className = `role-pill role-${user.role}`;
 
-    els.navPeminjamanBtn.hidden = false;
-    els.navPeminjamanBtn.textContent = isAdminOrSuper()
-      ? 'Kelola Peminjaman'
-      : 'Riwayat Peminjaman';
-
-    els.navProfilBtn.hidden = false;
-    els.navUsersBtn.hidden = !isSuperAdmin();
-    els.addAlatBtn.hidden = !isAdminOrSuper();
-    els.addBahanBtn.hidden = !isAdminOrSuper();
+    const staff = isAdminOrSuper();
+    els.navRiwayatItem.hidden = staff;
+    els.navKelolaPeminjamanItem.hidden = !staff;
+    els.dropdownAdmin.hidden = !staff;
+    els.navUsersItem.hidden = !isSuperAdmin();
+    els.addAlatBtn.hidden = !staff;
+    els.addBahanBtn.hidden = !staff;
 
     els.statRoleLabel.textContent = user.roleLabel || 'User';
     if (isSuperAdmin()) {
       els.statRoleSub.textContent = 'Akses penuh + Manajemen Pengguna';
-    } else if (isAdminOrSuper()) {
-      els.statRoleSub.textContent = 'Kelola inventaris & setujui peminjaman';
+    } else if (staff) {
+      els.statRoleSub.textContent = 'Kelola alat & setujui peminjaman';
     } else {
       els.statRoleSub.textContent = 'Dapat mengajukan peminjaman barang';
     }
 
-    els.peminjamanTitle.textContent = isAdminOrSuper()
+    els.peminjamanTitle.textContent = staff
       ? 'Kelola Peminjaman Laboratorium'
       : 'Riwayat Peminjaman Saya';
-    els.peminjamanSubtitle.textContent = isAdminOrSuper()
+    els.peminjamanSubtitle.textContent = staff
       ? 'Setujui, tunda, atau tolak pengajuan peminjaman. Email otomatis terkirim ke peminjam.'
       : 'Daftar seluruh pengajuan peminjaman laboratorium yang pernah Anda kirim.';
 
-    els.smtpTestBar.hidden = !isAdminOrSuper();
-    els.loanFilterBar.hidden = !isAdminOrSuper();
-    if (isAdminOrSuper()) {
+    els.smtpTestBar.hidden = !staff;
+    els.loanFilterBar.hidden = !staff;
+    if (staff) {
       els.smtpStatusBadge.textContent = state.gmailConfigured
         ? 'SMTP Gmail Siap'
         : 'GMAIL_USER Belum Diisi';
@@ -378,6 +486,8 @@
     }
   }
 
+  /* ===== DASHBOARD & INVENTORY VIEWS ===== */
+
   function renderDashboard() {
     els.statAlat.textContent = String(state.summary.totalAlatTypes ?? 0);
     els.statBahan.textContent = String(state.summary.totalBahanTypes ?? 0);
@@ -385,18 +495,28 @@
 
     renderPreviewList(
       els.alatPreview,
-      state.items.filter((i) => i.type === 'alat').slice(0, 4)
+      state.items.filter((i) => i.type === 'alat').slice(0, 4),
+      'alat'
     );
     renderPreviewList(
       els.bahanPreview,
-      state.items.filter((i) => i.type === 'bahan').slice(0, 4)
+      state.items.filter((i) => i.type === 'bahan').slice(0, 4),
+      'bahan'
     );
   }
 
-  function renderPreviewList(container, items) {
+  function renderPreviewList(container, items, kind) {
     container.replaceChildren();
     if (items.length === 0) {
-      container.appendChild(makeEl('div', 'empty-state', 'Belum ada data barang.'));
+      container.appendChild(
+        makeEl(
+          'div',
+          'empty-state',
+          kind === 'alat'
+            ? 'Belum ada data alat laboratorium.'
+            : 'Belum ada data bahan laboratorium.'
+        )
+      );
       return;
     }
 
@@ -408,15 +528,18 @@
       }
 
       const row = makeEl('div', 'preview-row');
-      const left = makeEl('div');
-      left.appendChild(makeEl('div', 'preview-row-title', `${item.code} — ${item.name}`));
-      left.appendChild(
+      const left = makeEl('div', 'item-cell-with-thumb');
+      left.appendChild(createThumbnail(item.imageUrl, item.name, 'item-thumb-sm'));
+      const textWrap = makeEl('div');
+      textWrap.appendChild(makeEl('div', 'preview-row-title', `${item.code} — ${item.name}`));
+      textWrap.appendChild(
         makeEl(
           'div',
           'preview-row-meta',
           `${item.category} • Stok: ${item.availableStock}/${item.totalStock} ${item.unit}`
         )
       );
+      left.appendChild(textWrap);
 
       const right = makeEl('div', 'preview-row-right');
       const btn = makeEl('button', 'btn-emerald-sm', 'Pinjam Barang');
@@ -439,6 +562,8 @@
     top.appendChild(makeEl('span', 'code-chip', item.code));
     top.appendChild(makeEl('span', 'mobile-card-cond', item.condition || 'Baik'));
 
+    const thumb = createThumbnail(item.imageUrl, item.name, 'mobile-card-thumb');
+
     const mid = makeEl('div', 'mobile-card-mid');
     mid.appendChild(makeEl('div', 'mobile-card-title', item.name));
     mid.appendChild(makeEl('div', 'mobile-card-loc', item.location || item.category));
@@ -453,7 +578,7 @@
       )
     );
 
-    card.append(top, mid, bottom);
+    card.append(top, thumb, mid, bottom);
     return card;
   }
 
@@ -475,13 +600,16 @@
     mobileGrid.replaceChildren();
 
     if (filtered.length === 0) {
+      const emptyMsg = q
+        ? 'Tidak ada data yang cocok dengan pencarian.'
+        : `Belum ada data ${type === 'alat' ? 'inventaris alat' : 'daftar bahan'}.`;
       const tr = makeEl('tr');
-      const td = makeEl('td', 'empty-state', 'Tidak ada data yang cocok.');
+      const td = makeEl('td', 'empty-state', emptyMsg);
       td.colSpan = 6;
       tr.appendChild(td);
       tbody.appendChild(tr);
 
-      mobileGrid.appendChild(makeEl('div', 'empty-state', 'Tidak ada data yang cocok.'));
+      mobileGrid.appendChild(makeEl('div', 'empty-state', emptyMsg));
       return;
     }
 
@@ -494,10 +622,15 @@
       tdCode.appendChild(makeEl('span', 'code-chip', item.code));
 
       const tdName = makeEl('td');
-      tdName.appendChild(makeEl('div', 'item-main-name', item.name));
+      const nameWrap = makeEl('div', 'item-cell-with-thumb');
+      nameWrap.appendChild(createThumbnail(item.imageUrl, item.name, 'item-thumb-sm'));
+      const textCol = makeEl('div');
+      textCol.appendChild(makeEl('div', 'item-main-name', item.name));
       if (item.description) {
-        tdName.appendChild(makeEl('div', 'item-sub-desc', item.description));
+        textCol.appendChild(makeEl('div', 'item-sub-desc', item.description));
       }
+      nameWrap.appendChild(textCol);
+      tdName.appendChild(nameWrap);
 
       const tdCatLoc = makeEl('td');
       tdCatLoc.appendChild(makeEl('div', 'item-main-name', item.category));
@@ -546,12 +679,128 @@
     }
   }
 
+  /* ===== PANEL ADMIN: KELOLA & EDIT DATA ALAT ===== */
+
+  function syncAdminCategoryOptions() {
+    if (!els.adminFilterCategory) return;
+    const prev = els.adminFilterCategory.value || 'all';
+    const categories = new Set(PHYSICS_CATEGORIES);
+    for (const item of state.items) {
+      if (item.category) categories.add(item.category);
+    }
+
+    els.adminFilterCategory.replaceChildren();
+    const allOpt = makeEl('option', null, 'Semua Kategori');
+    allOpt.value = 'all';
+    els.adminFilterCategory.appendChild(allOpt);
+
+    for (const cat of categories) {
+      const opt = makeEl('option', null, cat);
+      opt.value = cat;
+      els.adminFilterCategory.appendChild(opt);
+    }
+
+    els.adminFilterCategory.value = Array.from(categories).includes(prev) ? prev : 'all';
+  }
+
+  function renderAdminInventoryTable() {
+    if (!els.adminAlatBody) return;
+    syncAdminCategoryOptions();
+
+    const typeFilter = els.adminFilterType?.value || 'all';
+    const catFilter = (els.adminFilterCategory?.value || 'all').toLowerCase();
+    const q = (els.searchAdminAlat?.value || '').trim().toLowerCase();
+
+    const filtered = state.items.filter((item) => {
+      if (typeFilter !== 'all' && item.type !== typeFilter) return false;
+      if (catFilter !== 'all' && String(item.category || '').toLowerCase() !== catFilter) {
+        return false;
+      }
+      if (!q) return true;
+      return [item.code, item.name, item.category, item.location, item.condition]
+        .filter(Boolean)
+        .some((v) => v.toLowerCase().includes(q));
+    });
+
+    els.adminAlatBody.replaceChildren();
+    if (filtered.length === 0) {
+      const tr = makeEl('tr');
+      const td = makeEl(
+        'td',
+        'empty-state',
+        state.items.length === 0
+          ? 'Belum ada data alat atau bahan di data/equipment.json. Klik "+ Tambah Alat / Bahan" untuk menambahkan.'
+          : 'Tidak ada data yang cocok dengan filter.'
+      );
+      td.colSpan = 6;
+      tr.appendChild(td);
+      els.adminAlatBody.appendChild(tr);
+      return;
+    }
+
+    for (const item of filtered) {
+      const tr = makeEl('tr');
+
+      const tdCode = makeEl('td');
+      tdCode.appendChild(makeEl('span', 'code-chip', item.code));
+
+      const tdName = makeEl('td');
+      const wrap = makeEl('div', 'item-cell-with-thumb');
+      wrap.appendChild(createThumbnail(item.imageUrl, item.name, 'item-thumb-sm'));
+      const txt = makeEl('div');
+      txt.appendChild(makeEl('div', 'item-main-name', item.name));
+      txt.appendChild(
+        makeEl('div', 'item-sub-desc', item.type === 'bahan' ? 'Bahan Laboratorium' : 'Alat Laboratorium')
+      );
+      wrap.appendChild(txt);
+      tdName.appendChild(wrap);
+
+      const tdCat = makeEl('td');
+      tdCat.appendChild(makeEl('div', 'item-main-name', item.category));
+      tdCat.appendChild(makeEl('div', 'item-sub-desc', item.location));
+
+      const tdCond = makeEl('td', null, item.condition || 'Baik');
+
+      const tdStock = makeEl('td');
+      const stockClass = item.availableStock > 0 ? 'status-approved' : 'status-rejected';
+      tdStock.appendChild(
+        makeEl(
+          'span',
+          `status-pill ${stockClass}`,
+          `${item.availableStock} / ${item.totalStock} ${item.unit}`
+        )
+      );
+
+      const tdAct = makeEl('td', 'text-right');
+      const actions = makeEl('div', 'row-actions');
+      const editBtn = makeEl('button', 'btn-emerald-sm', 'Edit Data');
+      editBtn.type = 'button';
+      editBtn.addEventListener('click', () => openItemModal(item.type, item));
+
+      const delBtn = makeEl('button', 'btn-danger-sm', 'Hapus');
+      delBtn.type = 'button';
+      delBtn.addEventListener('click', () => handleDeleteItem(item));
+
+      actions.append(editBtn, delBtn);
+      tdAct.appendChild(actions);
+      tr.append(tdCode, tdName, tdCat, tdCond, tdStock, tdAct);
+      els.adminAlatBody.appendChild(tr);
+    }
+  }
+
   /* ===== DETAIL MODAL ===== */
 
   function openItemDetailModal(item) {
     state.detailItem = item;
     els.detailCode.textContent = item.code;
     els.detailTitle.textContent = item.name;
+    els.detailPhoto.src = safeImgSrc(item.imageUrl);
+    els.detailPhoto.alt = item.name;
+    els.detailPhoto.onerror = () => {
+      if (els.detailPhoto.getAttribute('src') !== DEFAULT_IMAGE) {
+        els.detailPhoto.src = DEFAULT_IMAGE;
+      }
+    };
     els.detailCategory.textContent = `${item.type === 'bahan' ? 'Bahan' : 'Alat'} • ${item.category}`;
     els.detailLocation.textContent = item.location || '-';
     els.detailCondition.textContent = item.condition || 'Baik';
@@ -576,29 +825,68 @@
 
   /* ===== LOAN FORM & STATUS ===== */
 
+  function populateLoanSelectOptions(select, preselectedId = '') {
+    select.replaceChildren();
+    const availableItems = state.items.filter((i) => i.availableStock > 0);
+    if (availableItems.length === 0) {
+      const opt = makeEl('option', null, 'Belum ada barang tersedia di inventaris');
+      opt.value = '';
+      select.appendChild(opt);
+      return false;
+    }
+
+    for (const item of availableItems) {
+      const opt = makeEl(
+        'option',
+        null,
+        `${item.code} — ${item.name} (${item.type === 'bahan' ? 'Bahan' : 'Alat'}, stok ${item.availableStock} ${item.unit})`
+      );
+      opt.value = item.id;
+      if (item.id === preselectedId) {
+        opt.selected = true;
+      }
+      select.appendChild(opt);
+    }
+    return true;
+  }
+
+  function updateLoanRowThumb(thumbImg, itemId) {
+    if (!thumbImg) return;
+    const matched = state.items.find((i) => i.id === itemId);
+    thumbImg.src = safeImgSrc(matched?.imageUrl);
+    thumbImg.alt = matched?.name || 'Foto barang dipilih';
+  }
+
+  function refreshLoanFormItems() {
+    if (!els.loanItemsContainer || els.loanItemsContainer.children.length === 0) return;
+    let anyAvailable = false;
+    for (const row of els.loanItemsContainer.children) {
+      const select = row.querySelector('select');
+      const thumbImg = row.querySelector('img.loan-row-thumb');
+      if (select) {
+        const currentVal = select.value;
+        if (populateLoanSelectOptions(select, currentVal)) {
+          anyAvailable = true;
+        }
+        updateLoanRowThumb(thumbImg, select.value);
+      }
+    }
+    if (els.submitLoanBtn) {
+      els.submitLoanBtn.disabled = !anyAvailable;
+    }
+  }
+
   function addLoanItemRow(preselectedId = '', qty = 1) {
     const row = makeEl('div', 'loan-item-row');
+    const thumbImg = createThumbnail(DEFAULT_IMAGE, 'Foto barang dipilih', 'loan-row-thumb');
 
     const select = makeEl('select');
     select.required = true;
-    const availableItems = state.items.filter((i) => i.availableStock > 0);
-    if (availableItems.length === 0) {
-      const opt = makeEl('option', null, 'Tidak ada barang tersedia');
-      opt.value = '';
-      select.appendChild(opt);
-    } else {
-      for (const item of availableItems) {
-        const opt = makeEl(
-          'option',
-          null,
-          `${item.code} — ${item.name} (${item.type === 'alat' ? 'Alat' : 'Bahan'}, stok ${item.availableStock} ${item.unit})`
-        );
-        opt.value = item.id;
-        if (item.id === preselectedId) {
-          opt.selected = true;
-        }
-        select.appendChild(opt);
-      }
+    const hasItems = populateLoanSelectOptions(select, preselectedId);
+    updateLoanRowThumb(thumbImg, select.value);
+    select.addEventListener('change', () => updateLoanRowThumb(thumbImg, select.value));
+    if (els.submitLoanBtn) {
+      els.submitLoanBtn.disabled = !hasItems;
     }
 
     const qtyInput = makeEl('input');
@@ -616,7 +904,7 @@
       }
     });
 
-    row.append(select, qtyInput, removeBtn);
+    row.append(thumbImg, select, qtyInput, removeBtn);
     els.loanItemsContainer.appendChild(row);
   }
 
@@ -640,6 +928,8 @@
       els.loanItemsContainer.replaceChildren();
       addLoanItemRow(state.preselectItemId || '');
       state.preselectItemId = null;
+    } else {
+      refreshLoanFormItems();
     }
   }
 
@@ -698,7 +988,7 @@
       showInlineAlert(els.loanSubmitFeedback, error.message, 'error');
       showToast('Gagal Mengajukan', error.message, 'error');
     } finally {
-      els.submitLoanBtn.disabled = false;
+      els.submitLoanBtn.disabled = state.items.filter((i) => i.availableStock > 0).length === 0;
       els.submitLoanBtn.textContent = 'Ajukan Peminjaman';
     }
   }
@@ -1038,6 +1328,15 @@
 
   /* ===== ADMIN / SUPER ADMIN INVENTORY CRUD MODAL ===== */
 
+  function syncItemPhotoPreview(url) {
+    els.itemImagePreview.src = safeImgSrc(url);
+    els.itemImagePreview.onerror = () => {
+      if (els.itemImagePreview.getAttribute('src') !== DEFAULT_IMAGE) {
+        els.itemImagePreview.src = DEFAULT_IMAGE;
+      }
+    };
+  }
+
   function openItemModal(defaultType, item = null) {
     els.itemId.value = item ? item.id : '';
     els.itemType.value = item ? item.type : defaultType;
@@ -1049,15 +1348,49 @@
     els.itemUnit.value = item ? item.unit : 'unit';
     els.itemTotal.value = item ? String(item.totalStock) : '1';
     els.itemAvailable.value = item ? String(item.availableStock) : '1';
+    const imgUrl = item ? safeImgSrc(item.imageUrl) : DEFAULT_IMAGE;
+    els.itemImageUrl.value = imgUrl;
+    if (els.itemImageFile) els.itemImageFile.value = '';
+    syncItemPhotoPreview(imgUrl);
     els.itemDesc.value = item ? item.description || '' : '';
     els.itemModalTitle.textContent = item
-      ? `Edit ${item.code}`
+      ? `Edit ${item.code} — ${item.name}`
       : `Tambah ${defaultType === 'bahan' ? 'Bahan' : 'Alat'}`;
     els.itemModal.hidden = false;
   }
 
   function closeItemModal() {
     els.itemModal.hidden = true;
+  }
+
+  function handleImageFileSelected(event) {
+    const file = event.target?.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      showToast('Ukuran Terlalu Besar', 'Ukuran foto maksimal 2 MB.', 'error');
+      els.itemImageFile.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const data = await apiJson('/api/inventory/upload-image', {
+          method: 'POST',
+          body: JSON.stringify({
+            filename: file.name,
+            dataUrl: reader.result,
+          }),
+        });
+        if (!data?.imageUrl) return;
+        els.itemImageUrl.value = data.imageUrl;
+        syncItemPhotoPreview(data.imageUrl);
+        showToast('Foto Diunggah', `Foto tersimpan di ${data.imageUrl}`);
+      } catch (error) {
+        showToast('Gagal Upload Foto', error.message, 'error');
+      }
+    };
+    reader.readAsDataURL(file);
   }
 
   async function handleItemModalSubmit(event) {
@@ -1073,6 +1406,7 @@
       unit: els.itemUnit.value.trim(),
       totalStock: Number(els.itemTotal.value),
       availableStock: Number(els.itemAvailable.value),
+      imageUrl: els.itemImageUrl.value.trim() || DEFAULT_IMAGE,
       description: els.itemDesc.value.trim(),
     };
 
@@ -1083,7 +1417,7 @@
           method: 'PUT',
           body: JSON.stringify(payload),
         });
-        showToast('Inventaris Diperbarui', `${payload.name} berhasil diperbarui.`);
+        showToast('Data Alat Diperbarui', `${payload.name} diperbarui di seluruh halaman.`);
       } else {
         await apiJson('/api/inventory', {
           method: 'POST',
@@ -1118,6 +1452,8 @@
     renderDashboard();
     renderInventoryTable('alat');
     renderInventoryTable('bahan');
+    renderAdminInventoryTable();
+    refreshLoanFormItems();
   }
 
   async function loadSession() {
@@ -1158,12 +1494,39 @@
       els.toast.hidden = true;
     });
 
-    for (const tabBtn of [...els.navTabs, ...els.bottomNavItems]) {
-      tabBtn.addEventListener('click', () => {
-        if (tabBtn.dataset.tab === 'pinjam') {
+    for (const toggleBtn of document.querySelectorAll('[data-dropdown-toggle]')) {
+      toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleDropdown(toggleBtn.dataset.dropdownToggle);
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.nav-dropdown')) {
+        closeAllDropdowns();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeAllDropdowns();
+        if (!els.itemDetailModal.hidden) closeItemDetailModal();
+        if (!els.itemModal.hidden) closeItemModal();
+      }
+    });
+
+    const tabButtons = [
+      els.navDashboardTab,
+      ...document.querySelectorAll('.nav-dropdown-item[data-tab]'),
+      ...els.bottomNavItems,
+    ].filter(Boolean);
+
+    for (const btn of tabButtons) {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.tab === 'pinjam') {
           navigateToBorrow();
         } else {
-          switchTab(tabBtn.dataset.tab);
+          switchTab(btn.dataset.tab);
         }
       });
     }
@@ -1173,7 +1536,7 @@
       switchTab('dashboard');
     });
 
-    els.navAvatarBtn?.addEventListener('click', () => switchTab('profil'));
+    els.navAvatarMobileBtn?.addEventListener('click', () => switchTab('profil'));
 
     document.getElementById('hero-borrow-btn')?.addEventListener('click', () => {
       navigateToBorrow();
@@ -1189,8 +1552,16 @@
     els.searchAlat.addEventListener('input', () => renderInventoryTable('alat'));
     els.searchBahan.addEventListener('input', () => renderInventoryTable('bahan'));
 
+    els.adminFilterType?.addEventListener('change', () => renderAdminInventoryTable());
+    els.adminFilterCategory?.addEventListener('change', () => renderAdminInventoryTable());
+    els.searchAdminAlat?.addEventListener('input', () => renderAdminInventoryTable());
+    els.adminAddItemBtn?.addEventListener('click', () => openItemModal('alat'));
+
     els.addAlatBtn.addEventListener('click', () => openItemModal('alat'));
     els.addBahanBtn.addEventListener('click', () => openItemModal('bahan'));
+
+    els.itemImageUrl?.addEventListener('input', () => syncItemPhotoPreview(els.itemImageUrl.value));
+    els.itemImageFile?.addEventListener('change', handleImageFileSelected);
 
     document.getElementById('item-modal-close')?.addEventListener('click', closeItemModal);
     document.getElementById('item-modal-cancel')?.addEventListener('click', closeItemModal);
@@ -1233,7 +1604,7 @@
     els.createUserForm.addEventListener('submit', handleCreateUser);
 
     els.navLogoutBtn?.addEventListener('click', () => {
-      els.navLogoutBtn.disabled = true;
+      closeAllDropdowns();
       performLogout();
     });
     els.profileLogoutBtn?.addEventListener('click', () => {

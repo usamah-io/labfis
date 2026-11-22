@@ -1,7 +1,6 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import {
   LOAN_STATUS,
   ROLE_LABELS,
@@ -9,10 +8,16 @@ import {
   SUPER_ADMIN_EMAIL,
 } from '../config/roles.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const DATA_DIR = path.resolve(__dirname, '../../data');
-const DB_PATH = path.join(DATA_DIR, 'db.json');
+const IS_VERCEL = Boolean(process.env.VERCEL);
+const SEED_DATA_DIR = path.join(process.cwd(), 'data');
+const RUNTIME_DATA_DIR = IS_VERCEL ? path.join('/tmp', 'labfis-data') : SEED_DATA_DIR;
+
+const SEED_DB_PATH = path.join(SEED_DATA_DIR, 'db.json');
+const SEED_EQUIPMENT_PATH = path.join(SEED_DATA_DIR, 'equipment.json');
+const DB_PATH = path.join(RUNTIME_DATA_DIR, 'db.json');
+const EQUIPMENT_PATH = path.join(RUNTIME_DATA_DIR, 'equipment.json');
+
+export const DEFAULT_EQUIPMENT_IMAGE = '/images/alat/placeholder.svg';
 
 const SCRYPT_KEYLEN = 64;
 
@@ -40,7 +45,25 @@ function verifyPassword(plainPassword, salt, storedHashHex) {
   return crypto.timingSafeEqual(derivedKey, storedBuffer);
 }
 
-function createInitialSeedData() {
+export function sanitizeImageUrl(url) {
+  if (typeof url !== 'string') {
+    return DEFAULT_EQUIPMENT_IMAGE;
+  }
+  const trimmed = url.trim();
+  if (!trimmed || trimmed.includes('..') || trimmed.includes('\\')) {
+    return DEFAULT_EQUIPMENT_IMAGE;
+  }
+  if (
+    trimmed.startsWith('/images/') ||
+    trimmed.startsWith('/api/uploads/') ||
+    trimmed.startsWith('https://')
+  ) {
+    return trimmed;
+  }
+  return DEFAULT_EQUIPMENT_IMAGE;
+}
+
+function createInitialDbData() {
   const now = new Date().toISOString();
   return {
     users: [
@@ -54,196 +77,48 @@ function createInitialSeedData() {
         credentials: hashPassword('SuperAdmin2026!'),
         createdAt: now,
       },
-      {
-        id: 'usr-admin-1',
-        name: 'Dr. Ardiansyah Pratama',
-        email: 'admin@labfis.ac.id',
-        role: ROLES.ADMIN,
-        provider: 'email',
-        picture: null,
-        credentials: hashPassword('LabFis2026!'),
-        createdAt: now,
-      },
-      {
-        id: 'usr-user-1',
-        name: 'Budi Santoso',
-        email: 'user@labfis.ac.id',
-        role: ROLES.USER,
-        provider: 'email',
-        picture: null,
-        credentials: hashPassword('UserLabFis2026!'),
-        createdAt: now,
-      },
-    ],
-    items: [
-      {
-        id: 'alt-001',
-        code: 'ALT-001',
-        name: 'Osiloskop Digital 100 MHz',
-        type: 'alat',
-        category: 'Elektronika & Gelombang',
-        location: 'Lemari A1 — Lab Fisika Dasar',
-        condition: 'Baik',
-        unit: 'unit',
-        totalStock: 6,
-        availableStock: 6,
-        description: 'Osiloskop 2-kanal 100 MHz lengkap dengan probe BNC untuk praktikum gelombang dan rangkaian AC.',
-      },
-      {
-        id: 'alt-002',
-        code: 'ALT-002',
-        name: 'Multimeter Digital Fluke',
-        type: 'alat',
-        category: 'Pengukuran Listrik',
-        location: 'Lemari A2 — Lab Elektronika',
-        condition: 'Baik',
-        unit: 'unit',
-        totalStock: 12,
-        availableStock: 12,
-        description: 'Multimeter digital presisi True-RMS untuk pengukuran tegangan, arus, dan resistansi.',
-      },
-      {
-        id: 'alt-003',
-        code: 'ALT-003',
-        name: 'Bangku Optik & Lensa Konvergen',
-        type: 'alat',
-        category: 'Optika',
-        location: 'Rak B1 — Lab Optika',
-        condition: 'Baik',
-        unit: 'set',
-        totalStock: 8,
-        availableStock: 8,
-        description: 'Rel optik 120 cm beserta sumber cahaya LED, dudukan lensa, dan layar pengamat.',
-      },
-      {
-        id: 'alt-004',
-        code: 'ALT-004',
-        name: 'Neraca Analitik Digital 0.001g',
-        type: 'alat',
-        category: 'Mekanika & Metrologi',
-        location: 'Meja Timbang C1',
-        condition: 'Baik',
-        unit: 'unit',
-        totalStock: 5,
-        availableStock: 5,
-        description: 'Timbangan digital resolusi 1 mg dengan pelindung angin akrilik.',
-      },
-      {
-        id: 'alt-005',
-        code: 'ALT-005',
-        name: 'Catu Daya DC Variabel 0–30V',
-        type: 'alat',
-        category: 'Elektronika',
-        location: 'Lemari A3 — Lab Elektronika',
-        condition: 'Baik',
-        unit: 'unit',
-        totalStock: 10,
-        availableStock: 10,
-        description: 'Power supply teregulasi tegangan dan arus untuk eksperimen rangkaian DC.',
-      },
-      {
-        id: 'alt-006',
-        code: 'ALT-006',
-        name: 'Set Bandul Matematis & Stopwatch Digital',
-        type: 'alat',
-        category: 'Mekanika Klasik',
-        location: 'Rak C2 — Lab Mekanika',
-        condition: 'Baik',
-        unit: 'set',
-        totalStock: 7,
-        availableStock: 7,
-        description: 'Statif, bola bandul bervariasi massa, busur derajat, dan stopwatch resolusi 0.01 detik.',
-      },
-      {
-        id: 'bhn-001',
-        code: 'BHN-001',
-        name: 'Kabel Jumper & Jepit Buaya',
-        type: 'bahan',
-        category: 'Konektor Praktikum',
-        location: 'Laci D1 — Gudang Bahan',
-        condition: 'Baru',
-        unit: 'set',
-        totalStock: 40,
-        availableStock: 40,
-        description: 'Paket kabel penghubung merah/hitam dengan capit buaya untuk rangkaian percobaan.',
-      },
-      {
-        id: 'bhn-002',
-        code: 'BHN-002',
-        name: 'Resistor Karbon Assorted Kit',
-        type: 'bahan',
-        category: 'Komponen Elektronika',
-        location: 'Laci D2 — Lab Elektronika',
-        condition: 'Baru',
-        unit: 'paket',
-        totalStock: 25,
-        availableStock: 25,
-        description: 'Set resistor 1/4W berbagai nilai (10 Ohm – 1 MOhm) untuk modul Hukum Ohm dan jembatan Wheatstone.',
-      },
-      {
-        id: 'bhn-003',
-        code: 'BHN-003',
-        name: 'Alkohol Teknis 96% Pembersih Optik',
-        type: 'bahan',
-        category: 'Bahan Kimia Penunjang',
-        location: 'Lemari Bahan E1',
-        condition: 'Tersedia',
-        unit: 'botol',
-        totalStock: 10,
-        availableStock: 10,
-        description: 'Botol 250 ml cairan pembersih lensa, prisma, dan cermin optik laboratorium.',
-      },
-      {
-        id: 'bhn-004',
-        code: 'BHN-004',
-        name: 'Timah Solder Bebas Timbal 0.8mm',
-        type: 'bahan',
-        category: 'Komponen Elektronika',
-        location: 'Laci D3 — Lab Elektronika',
-        condition: 'Baru',
-        unit: 'rol',
-        totalStock: 15,
-        availableStock: 15,
-        description: 'Kawat timah solder bebas timbal dengan inti flux untuk perakitan modul sensor.',
-      },
-      {
-        id: 'bhn-005',
-        code: 'BHN-005',
-        name: 'Kertas Grafik Milimeter Blok A4',
-        type: 'bahan',
-        category: 'ATK Praktikum',
-        location: 'Rak Administrasi F1',
-        condition: 'Baru',
-        unit: 'pak',
-        totalStock: 30,
-        availableStock: 30,
-        description: 'Kertas milimeter blok A4 (isi 50 lembar/pak) untuk plotting grafik regresi eksperimen.',
-      },
-      {
-        id: 'bhn-006',
-        code: 'BHN-006',
-        name: 'Baterai Alkaline 9V',
-        type: 'bahan',
-        category: 'Sumber Daya Habis Pakai',
-        location: 'Laci D4 — Gudang Bahan',
-        condition: 'Baru',
-        unit: 'buah',
-        totalStock: 24,
-        availableStock: 24,
-        description: 'Baterai 9V untuk multimeter portabel, rangkaian sensor, dan modul eksperimen.',
-      },
     ],
     loans: [],
   };
 }
 
+function createInitialEquipmentData() {
+  return {
+    items: [],
+  };
+}
+
 let dbCache = null;
+let equipmentCache = null;
+
+function atomicWriteJson(filePath, payload) {
+  try {
+    fs.mkdirSync(RUNTIME_DATA_DIR, { recursive: true });
+    const tempPath = `${filePath}.tmp`;
+    fs.writeFileSync(tempPath, JSON.stringify(payload, null, 2), 'utf8');
+    fs.renameSync(tempPath, filePath);
+  } catch (error) {
+    console.error('[LabFis DB] Gagal menulis ke filesystem:', error?.message || error);
+  }
+}
+
+function copySeedIfNeeded(seedPath, runtimePath) {
+  try {
+    if (!fs.existsSync(runtimePath) && fs.existsSync(seedPath)) {
+      fs.mkdirSync(path.dirname(runtimePath), { recursive: true });
+      fs.copyFileSync(seedPath, runtimePath);
+    }
+  } catch (error) {
+    console.warn('[LabFis DB] Gagal menyalin seed ke /tmp:', error?.message || error);
+  }
+}
 
 function persistDb(state) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-  const tempPath = `${DB_PATH}.tmp`;
-  fs.writeFileSync(tempPath, JSON.stringify(state, null, 2), 'utf8');
-  fs.renameSync(tempPath, DB_PATH);
+  atomicWriteJson(DB_PATH, state);
+}
+
+function persistEquipment(state) {
+  atomicWriteJson(EQUIPMENT_PATH, state);
 }
 
 function ensureSuperAdminInvariant(state) {
@@ -271,44 +146,96 @@ function ensureSuperAdminInvariant(state) {
   return changed;
 }
 
+function normalizeEquipmentItem(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  return {
+    ...raw,
+    imageUrl: sanitizeImageUrl(raw.imageUrl),
+  };
+}
+
 /**
- * Initialize and load the JSON database into memory, seeding defaults if needed.
+ * Initialize and load users/loans (db.json) and equipment catalog (equipment.json).
  */
 export function initDb() {
-  if (dbCache) {
-    return dbCache;
-  }
-
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-
-  if (!fs.existsSync(DB_PATH)) {
-    dbCache = createInitialSeedData();
-    persistDb(dbCache);
-    return dbCache;
-  }
-
   try {
-    const raw = fs.readFileSync(DB_PATH, 'utf8');
-    const parsed = JSON.parse(raw);
-    dbCache = {
-      users: Array.isArray(parsed?.users) ? parsed.users : [],
-      items: Array.isArray(parsed?.items) ? parsed.items : createInitialSeedData().items,
-      loans: Array.isArray(parsed?.loans) ? parsed.loans : [],
-    };
-    if (ensureSuperAdminInvariant(dbCache)) {
-      persistDb(dbCache);
-    }
-    return dbCache;
+    fs.mkdirSync(RUNTIME_DATA_DIR, { recursive: true });
   } catch (error) {
-    console.warn('[LabFis DB] Gagal membaca db.json, membuat ulang seed default:', error?.message);
-    dbCache = createInitialSeedData();
-    persistDb(dbCache);
-    return dbCache;
+    console.warn('[LabFis DB] Tidak dapat membuat direktori data:', error?.message || error);
   }
+
+  if (IS_VERCEL) {
+    copySeedIfNeeded(SEED_DB_PATH, DB_PATH);
+    copySeedIfNeeded(SEED_EQUIPMENT_PATH, EQUIPMENT_PATH);
+  }
+
+  if (!dbCache) {
+    const readPath = fs.existsSync(DB_PATH)
+      ? DB_PATH
+      : fs.existsSync(SEED_DB_PATH)
+        ? SEED_DB_PATH
+        : null;
+
+    if (!readPath) {
+      dbCache = createInitialDbData();
+      persistDb(dbCache);
+    } else {
+      try {
+        const raw = fs.readFileSync(readPath, 'utf8');
+        const parsed = JSON.parse(raw);
+        dbCache = {
+          users: Array.isArray(parsed?.users) ? parsed.users : [],
+          loans: Array.isArray(parsed?.loans) ? parsed.loans : [],
+        };
+        if (ensureSuperAdminInvariant(dbCache)) {
+          persistDb(dbCache);
+        }
+      } catch (error) {
+        console.warn('[LabFis DB] Gagal membaca db.json, membuat ulang seed bersih:', error?.message);
+        dbCache = createInitialDbData();
+        persistDb(dbCache);
+      }
+    }
+  }
+
+  if (!equipmentCache) {
+    const readEqPath = fs.existsSync(EQUIPMENT_PATH)
+      ? EQUIPMENT_PATH
+      : fs.existsSync(SEED_EQUIPMENT_PATH)
+        ? SEED_EQUIPMENT_PATH
+        : null;
+
+    if (!readEqPath) {
+      equipmentCache = createInitialEquipmentData();
+      persistEquipment(equipmentCache);
+    } else {
+      try {
+        const rawEq = fs.readFileSync(readEqPath, 'utf8');
+        const parsedEq = JSON.parse(rawEq);
+        equipmentCache = {
+          items: Array.isArray(parsedEq?.items)
+            ? parsedEq.items.map(normalizeEquipmentItem).filter(Boolean)
+            : [],
+        };
+      } catch (error) {
+        console.warn('[LabFis DB] Gagal membaca equipment.json, membuat ulang kosong:', error?.message);
+        equipmentCache = createInitialEquipmentData();
+        persistEquipment(equipmentCache);
+      }
+    }
+  }
+
+  return { db: dbCache, equipment: equipmentCache };
 }
 
 function getDb() {
-  return dbCache || initDb();
+  if (!dbCache) initDb();
+  return dbCache;
+}
+
+function getEquipment() {
+  if (!equipmentCache) initDb();
+  return equipmentCache;
 }
 
 export function sanitizeUser(user) {
@@ -509,14 +436,19 @@ export function getAdminAndSuperAdminEmails() {
   return Array.from(emails);
 }
 
-/* ==================== INVENTORY REPOSITORY ==================== */
+/* ==================== INVENTORY REPOSITORY (data/equipment.json) ==================== */
 
-export function listInventory({ type, q } = {}) {
-  const db = getDb();
-  let items = [...db.items];
+export function listInventory({ type, category, q } = {}) {
+  const equipment = getEquipment();
+  let items = [...equipment.items];
 
   if (type === 'alat' || type === 'bahan') {
     items = items.filter((item) => item.type === type);
+  }
+
+  if (typeof category === 'string' && category.trim() && category !== 'all') {
+    const cat = category.trim().toLowerCase();
+    items = items.filter((item) => String(item.category || '').toLowerCase() === cat);
   }
 
   if (typeof q === 'string' && q.trim()) {
@@ -528,23 +460,23 @@ export function listInventory({ type, q } = {}) {
     );
   }
 
-  const alatItems = db.items.filter((i) => i.type === 'alat');
-  const bahanItems = db.items.filter((i) => i.type === 'bahan');
+  const alatItems = equipment.items.filter((i) => i.type === 'alat');
+  const bahanItems = equipment.items.filter((i) => i.type === 'bahan');
 
   return {
     items,
     summary: {
       totalAlatTypes: alatItems.length,
       totalBahanTypes: bahanItems.length,
-      totalAvailableUnits: db.items.reduce((sum, i) => sum + Number(i.availableStock || 0), 0),
-      totalUnits: db.items.reduce((sum, i) => sum + Number(i.totalStock || 0), 0),
+      totalAvailableUnits: equipment.items.reduce((sum, i) => sum + Number(i.availableStock || 0), 0),
+      totalUnits: equipment.items.reduce((sum, i) => sum + Number(i.totalStock || 0), 0),
     },
   };
 }
 
 export function findInventoryById(id) {
-  const db = getDb();
-  return db.items.find((item) => item.id === id) || null;
+  const equipment = getEquipment();
+  return equipment.items.find((item) => item.id === id) || null;
 }
 
 export function createInventoryItem(data) {
@@ -555,6 +487,7 @@ export function createInventoryItem(data) {
   const condition = typeof data?.condition === 'string' && data.condition.trim() ? data.condition.trim() : 'Baik';
   const unit = typeof data?.unit === 'string' && data.unit.trim() ? data.unit.trim() : 'unit';
   const description = typeof data?.description === 'string' ? data.description.trim() : '';
+  const imageUrl = sanitizeImageUrl(data?.imageUrl);
   const totalStock = Number(data?.totalStock);
   const availableStock =
     data?.availableStock === undefined || data?.availableStock === ''
@@ -571,19 +504,20 @@ export function createInventoryItem(data) {
     throw createHttpError(400, 'Stok tersedia harus di antara 0 dan total stok.');
   }
 
-  const db = getDb();
+  const equipment = getEquipment();
   const prefix = type === 'alat' ? 'ALT' : 'BHN';
   let code = typeof data?.code === 'string' ? data.code.trim().toUpperCase() : '';
   if (!code) {
-    const count = db.items.filter((i) => i.type === type).length + 1;
+    const count = equipment.items.filter((i) => i.type === type).length + 1;
     code = `${prefix}-${String(count).padStart(3, '0')}`;
-    while (db.items.some((i) => i.code.toUpperCase() === code)) {
+    while (equipment.items.some((i) => i.code.toUpperCase() === code)) {
       code = `${prefix}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
     }
-  } else if (db.items.some((i) => i.code.toUpperCase() === code)) {
+  } else if (equipment.items.some((i) => i.code.toUpperCase() === code)) {
     throw createHttpError(409, `Kode barang ${code} sudah digunakan.`);
   }
 
+  const now = new Date().toISOString();
   const item = {
     id: `${type === 'alat' ? 'alt' : 'bhn'}-${crypto.randomUUID().slice(0, 8)}`,
     code,
@@ -596,23 +530,25 @@ export function createInventoryItem(data) {
     totalStock,
     availableStock,
     description,
+    imageUrl,
+    updatedAt: now,
   };
 
-  db.items.push(item);
-  persistDb(db);
+  equipment.items.push(item);
+  persistEquipment(equipment);
   return item;
 }
 
 export function updateInventoryItem(id, data) {
-  const db = getDb();
-  const item = db.items.find((i) => i.id === id);
+  const equipment = getEquipment();
+  const item = equipment.items.find((i) => i.id === id);
   if (!item) {
     throw createHttpError(404, 'Item inventaris tidak ditemukan.');
   }
 
   if (typeof data?.code === 'string' && data.code.trim()) {
     const nextCode = data.code.trim().toUpperCase();
-    if (db.items.some((i) => i.id !== id && i.code.toUpperCase() === nextCode)) {
+    if (equipment.items.some((i) => i.id !== id && i.code.toUpperCase() === nextCode)) {
       throw createHttpError(409, `Kode barang ${nextCode} sudah digunakan.`);
     }
     item.code = nextCode;
@@ -639,6 +575,9 @@ export function updateInventoryItem(id, data) {
   if (typeof data?.description === 'string') {
     item.description = data.description.trim();
   }
+  if (data?.imageUrl !== undefined) {
+    item.imageUrl = sanitizeImageUrl(data.imageUrl);
+  }
 
   const nextTotal =
     data?.totalStock !== undefined && data?.totalStock !== ''
@@ -658,19 +597,20 @@ export function updateInventoryItem(id, data) {
 
   item.totalStock = nextTotal;
   item.availableStock = nextAvailable;
-  persistDb(db);
+  item.updatedAt = new Date().toISOString();
+  persistEquipment(equipment);
   return item;
 }
 
 export function deleteInventoryItem(id) {
-  const db = getDb();
-  const index = db.items.findIndex((i) => i.id === id);
+  const equipment = getEquipment();
+  const index = equipment.items.findIndex((i) => i.id === id);
   if (index === -1) {
     throw createHttpError(404, 'Item inventaris tidak ditemukan.');
   }
 
-  const [removed] = db.items.splice(index, 1);
-  persistDb(db);
+  const [removed] = equipment.items.splice(index, 1);
+  persistEquipment(equipment);
   return removed;
 }
 
@@ -721,6 +661,7 @@ export function createLoan({
   }
 
   const db = getDb();
+  const equipment = getEquipment();
   const merged = new Map();
   for (const entry of items) {
     const itemId = typeof entry?.itemId === 'string' ? entry.itemId.trim() : '';
@@ -733,7 +674,7 @@ export function createLoan({
 
   const resolvedItems = [];
   for (const [itemId, qty] of merged.entries()) {
-    const inv = db.items.find((i) => i.id === itemId);
+    const inv = equipment.items.find((i) => i.id === itemId);
     if (!inv) {
       throw createHttpError(404, 'Salah satu barang yang dipilih tidak ditemukan.');
     }
@@ -785,16 +726,18 @@ export function updateLoanStatus(id, { status, adminNote, reviewer }) {
   }
 
   const db = getDb();
+  const equipment = getEquipment();
   const loan = db.loans.find((l) => l.id === id);
   if (!loan) {
     throw createHttpError(404, 'Data peminjaman tidak ditemukan.');
   }
 
   const prevStatus = loan.status;
+  let stockChanged = false;
 
   if (prevStatus !== LOAN_STATUS.APPROVED && status === LOAN_STATUS.APPROVED) {
     for (const entry of loan.items) {
-      const inv = db.items.find((i) => i.id === entry.itemId);
+      const inv = equipment.items.find((i) => i.id === entry.itemId);
       if (!inv) {
         throw createHttpError(404, `Barang ${entry.name} tidak lagi tersedia di inventaris.`);
       }
@@ -806,14 +749,16 @@ export function updateLoanStatus(id, { status, adminNote, reviewer }) {
       }
     }
     for (const entry of loan.items) {
-      const inv = db.items.find((i) => i.id === entry.itemId);
+      const inv = equipment.items.find((i) => i.id === entry.itemId);
       inv.availableStock -= entry.qty;
     }
+    stockChanged = true;
   } else if (prevStatus === LOAN_STATUS.APPROVED && status !== LOAN_STATUS.APPROVED) {
     for (const entry of loan.items) {
-      const inv = db.items.find((i) => i.id === entry.itemId);
+      const inv = equipment.items.find((i) => i.id === entry.itemId);
       if (inv) {
         inv.availableStock = Math.min(inv.totalStock, inv.availableStock + entry.qty);
+        stockChanged = true;
       }
     }
   }
@@ -825,6 +770,9 @@ export function updateLoanStatus(id, { status, adminNote, reviewer }) {
   loan.reviewedByRole = ROLE_LABELS[reviewer.role] || reviewer.role;
   loan.reviewedAt = new Date().toISOString();
 
+  if (stockChanged) {
+    persistEquipment(equipment);
+  }
   persistDb(db);
   return loan;
 }

@@ -26,6 +26,7 @@
       <div class="mesh-orb mesh-orb-2"></div>
       <div class="mesh-orb mesh-orb-3"></div>
       <div class="mesh-orb mesh-orb-4"></div>
+      <div class="mesh-orb mesh-orb-5"></div>
       <div class="mesh-grain"></div>
     </div>
 
@@ -69,43 +70,158 @@
           <span class="brand-name">Lab<span>Fis</span></span>
         </a>
 
-        <div class="nav-links" role="tablist" aria-label="Menu portal">
+        <!-- Desktop Single-Row Navigation with Dropdowns -->
+        <div class="nav-links" role="navigation" aria-label="Menu utama desktop">
           <button type="button" class="nav-tab is-active" data-tab="dashboard">Dashboard</button>
-          <button type="button" class="nav-tab" data-tab="alat">Inventaris Alat</button>
-          <button type="button" class="nav-tab" data-tab="bahan">Daftar Bahan</button>
-          <button type="button" class="nav-tab nav-tab-accent" data-tab="pinjam" id="nav-pinjam-btn">
-            Pinjam Barang
-          </button>
-          <button type="button" class="nav-tab" data-tab="peminjaman" id="nav-peminjaman-btn" hidden>
-            Peminjaman
-          </button>
-          <button type="button" class="nav-tab" data-tab="users" id="nav-users-btn" hidden>
-            Manajemen Pengguna
-          </button>
-          <button type="button" class="nav-tab" data-tab="profil" id="nav-profil-btn" hidden>
-            Profil
-          </button>
+
+          <div class="nav-dropdown" id="dropdown-inventaris">
+            <button
+              type="button"
+              class="nav-dropdown-trigger"
+              data-dropdown-toggle="dropdown-inventaris"
+              aria-expanded="false"
+              aria-haspopup="true"
+            >
+              <span>Inventaris</span>
+              <svg class="nav-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path
+                  fill-rule="evenodd"
+                  d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+            <div class="nav-dropdown-menu" hidden>
+              <button type="button" class="nav-dropdown-item" data-tab="alat">
+                <span>Inventaris Alat</span>
+              </button>
+              <button type="button" class="nav-dropdown-item" data-tab="bahan">
+                <span>Daftar Bahan</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="nav-dropdown" id="dropdown-peminjaman">
+            <button
+              type="button"
+              class="nav-dropdown-trigger"
+              data-dropdown-toggle="dropdown-peminjaman"
+              aria-expanded="false"
+              aria-haspopup="true"
+            >
+              <span>Peminjaman</span>
+              <svg class="nav-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path
+                  fill-rule="evenodd"
+                  d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+            <div class="nav-dropdown-menu" hidden>
+              <button type="button" class="nav-dropdown-item" data-tab="pinjam">
+                <span>Pinjam Barang</span>
+              </button>
+              <button
+                type="button"
+                class="nav-dropdown-item"
+                id="nav-riwayat-item"
+                data-tab="peminjaman"
+                hidden
+              >
+                <span>Riwayat Peminjaman</span>
+              </button>
+              <button
+                type="button"
+                class="nav-dropdown-item"
+                id="nav-kelola-peminjaman-item"
+                data-tab="peminjaman"
+                hidden
+              >
+                <span>Kelola Peminjaman</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="nav-dropdown" id="dropdown-admin" hidden>
+            <button
+              type="button"
+              class="nav-dropdown-trigger"
+              data-dropdown-toggle="dropdown-admin"
+              aria-expanded="false"
+              aria-haspopup="true"
+            >
+              <span>Admin</span>
+              <svg class="nav-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path
+                  fill-rule="evenodd"
+                  d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+            <div class="nav-dropdown-menu" hidden>
+              <button type="button" class="nav-dropdown-item" data-tab="admin-alat">
+                <span>Kelola Alat / Edit Data</span>
+              </button>
+              <button
+                type="button"
+                class="nav-dropdown-item"
+                id="nav-users-item"
+                data-tab="users"
+                hidden
+              >
+                <span>Manajemen Pengguna</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class="nav-auth" id="nav-auth">
           <a href="/login" id="nav-login-link" class="btn-emerald-sm">Masuk</a>
           <div id="nav-user-box" class="nav-user-box" hidden>
+            <!-- Mobile compact avatar trigger -->
             <button
               type="button"
-              id="nav-avatar-btn"
-              class="nav-avatar-btn"
+              id="nav-avatar-mobile-btn"
+              class="nav-avatar-circle mobile-only"
               aria-label="Buka Halaman Profil"
               title="Profil Saya"
             >
               LF
             </button>
-            <div class="nav-user-info desktop-only">
-              <span id="nav-user-name" class="nav-user-name">-</span>
-              <span id="nav-user-role" class="role-pill role-user">User</span>
+
+            <!-- Desktop User Dropdown -->
+            <div class="nav-dropdown desktop-only" id="dropdown-user">
+              <button
+                type="button"
+                id="nav-user-dropdown-btn"
+                class="user-dropdown-trigger"
+                data-dropdown-toggle="dropdown-user"
+                aria-expanded="false"
+                aria-haspopup="true"
+              >
+                <span id="nav-avatar-desktop" class="nav-avatar-circle" aria-hidden="true">LF</span>
+                <span id="nav-user-name" class="nav-user-name">-</span>
+                <span id="nav-user-role" class="role-pill role-user">User</span>
+                <svg class="nav-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </button>
+              <div class="nav-dropdown-menu user-dropdown-menu" hidden>
+                <button type="button" class="nav-dropdown-item" data-tab="profil">
+                  <span>Profil</span>
+                </button>
+                <div class="nav-dropdown-divider" role="separator"></div>
+                <button type="button" id="nav-logout-btn" class="nav-dropdown-item nav-dropdown-danger">
+                  <span>Keluar</span>
+                </button>
+              </div>
             </div>
-            <button type="button" id="nav-logout-btn" class="btn-glass-sm desktop-only">
-              Keluar
-            </button>
           </div>
         </div>
       </nav>
@@ -211,7 +327,7 @@
               <thead>
                 <tr>
                   <th>Kode</th>
-                  <th>Nama Alat</th>
+                  <th>Alat</th>
                   <th>Kategori &amp; Lokasi</th>
                   <th>Kondisi</th>
                   <th>Stok Tersedia</th>
@@ -255,7 +371,7 @@
               <thead>
                 <tr>
                   <th>Kode</th>
-                  <th>Nama Bahan</th>
+                  <th>Bahan</th>
                   <th>Kategori &amp; Lokasi</th>
                   <th>Satuan</th>
                   <th>Stok Tersedia</th>
@@ -385,7 +501,58 @@
         </div>
       </section>
 
-      <!-- 6. HALAMAN PROFIL (/profil - WAJIB LOGIN) -->
+      <!-- 6. PANEL ADMIN — KELOLA & EDIT DATA ALAT (ADMIN & SUPER ADMIN) -->
+      <section id="view-admin-alat" class="portal-view" hidden>
+        <div class="panel-card glass-surface">
+          <div class="panel-head panel-head-wrap">
+            <div>
+              <h2 class="panel-title">Panel Admin — Kelola &amp; Edit Data Alat</h2>
+              <p class="panel-sub">
+                Ubah nama, kode, kategori, stok, lokasi, kondisi, dan foto secara terpusat di
+                <code>data/equipment.json</code>. Perubahan langsung tersinkron ke seluruh aplikasi.
+              </p>
+            </div>
+            <div class="panel-tools">
+              <select id="admin-filter-type" class="admin-filter-select" aria-label="Filter jenis barang">
+                <option value="all">Semua Jenis</option>
+                <option value="alat">Alat</option>
+                <option value="bahan">Bahan</option>
+              </select>
+              <select id="admin-filter-category" class="admin-filter-select" aria-label="Filter kategori">
+                <option value="all">Semua Kategori</option>
+              </select>
+              <input
+                type="search"
+                id="search-admin-alat"
+                class="search-input"
+                placeholder="Cari kode, nama, lokasi..."
+                aria-label="Cari di Panel Admin"
+              />
+              <button type="button" id="admin-add-item-btn" class="btn-emerald-sm">
+                + Tambah Alat / Bahan
+              </button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="glass-table">
+              <thead>
+                <tr>
+                  <th>Kode</th>
+                  <th>Foto &amp; Nama Barang</th>
+                  <th>Kategori &amp; Lokasi</th>
+                  <th>Kondisi</th>
+                  <th>Stok</th>
+                  <th class="text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="admin-alat-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. HALAMAN PROFIL (/profil - WAJIB LOGIN) -->
       <section id="view-profil" class="portal-view" hidden>
         <div class="profile-hero-card glass-surface">
           <div class="profile-identity">
@@ -449,7 +616,7 @@
         </div>
       </section>
 
-      <!-- 7. MANAJEMEN PENGGUNA (KHUSUS SUPER ADMIN) -->
+      <!-- 8. MANAJEMEN PENGGUNA (KHUSUS SUPER ADMIN) -->
       <section id="view-users" class="portal-view" hidden>
         <div class="panel-card glass-surface">
           <div class="panel-head panel-head-wrap">
@@ -570,6 +737,10 @@
           </button>
         </div>
 
+        <div class="detail-photo-wrap">
+          <img id="detail-photo" src="/images/alat/placeholder.svg" alt="Foto barang laboratorium" />
+        </div>
+
         <div class="detail-specs-grid">
           <div class="detail-spec-box">
             <div class="detail-spec-label">Jenis &amp; Kategori</div>
@@ -592,7 +763,7 @@
         <div id="detail-description" class="detail-description">-</div>
 
         <div class="modal-actions">
-          <button type="button" id="detail-edit-btn" class="btn-glass-sm" hidden>Edit</button>
+          <button type="button" id="detail-edit-btn" class="btn-glass-sm" hidden>Edit Data</button>
           <button type="button" id="detail-delete-btn" class="btn-danger-sm" hidden>Hapus</button>
           <button type="button" id="detail-borrow-btn" class="btn-primary">Pinjam Barang</button>
         </div>
@@ -621,7 +792,7 @@
             </div>
             <div class="field">
               <label for="item-code">Kode Barang (Opsional)</label>
-              <input id="item-code" type="text" placeholder="Otomatis jika kosong" />
+              <input id="item-code" type="text" placeholder="Otomatis jika kosong (mis. ALT-001)" />
             </div>
           </div>
 
@@ -633,11 +804,26 @@
           <div class="form-grid-2">
             <div class="field">
               <label for="item-category">Kategori</label>
-              <input id="item-category" type="text" placeholder="Contoh: Optika / Elektronika" />
+              <input
+                id="item-category"
+                type="text"
+                list="physics-categories"
+                placeholder="Pilih atau ketik kategori..."
+              />
+              <datalist id="physics-categories">
+                <option value="Alat Ukur Dasar"></option>
+                <option value="Mekanika"></option>
+                <option value="Kalor dan Termodinamika"></option>
+                <option value="Fluida"></option>
+                <option value="Listrik dan Magnet"></option>
+                <option value="Gelombang dan Bunyi"></option>
+                <option value="Optik"></option>
+                <option value="Fisika Modern"></option>
+              </datalist>
             </div>
             <div class="field">
               <label for="item-location">Lokasi Penyimpanan</label>
-              <input id="item-location" type="text" placeholder="Contoh: Lemari A1" />
+              <input id="item-location" type="text" placeholder="Contoh: Lemari A1 — Lab Fisika" />
             </div>
           </div>
 
@@ -657,6 +843,32 @@
             <div class="field">
               <label for="item-available">Stok Tersedia</label>
               <input id="item-available" type="number" min="0" required value="1" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="item-image-url">Foto Barang (Upload atau Path Gambar)</label>
+            <div class="photo-upload-row">
+              <div class="photo-preview-box">
+                <img
+                  id="item-image-preview"
+                  src="/images/alat/placeholder.svg"
+                  alt="Preview foto alat"
+                />
+              </div>
+              <div class="photo-upload-controls">
+                <input
+                  id="item-image-url"
+                  type="text"
+                  placeholder="/images/alat/placeholder.svg"
+                />
+                <input
+                  id="item-image-file"
+                  type="file"
+                  class="file-input-sm"
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                />
+              </div>
             </div>
           </div>
 

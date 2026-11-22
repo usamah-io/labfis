@@ -6,6 +6,7 @@ import {
   buildGoogleAuthUrl,
   exchangeCodeForTokens,
   fetchGoogleUserProfile,
+  resolveGoogleRedirectUri,
 } from '../services/googleAuth.js';
 import { isGmailConfigured } from '../services/mailer.js';
 import {
@@ -37,8 +38,9 @@ router.get('/auth/google', (req, res) => {
 
   const nextPath = sanitizeRedirectPath(req.query.next);
   const state = crypto.randomBytes(24).toString('hex');
-  setOAuthStateCookie(res, state, nextPath);
-  return res.redirect(buildGoogleAuthUrl(state));
+  const redirectUri = resolveGoogleRedirectUri(req);
+  setOAuthStateCookie(res, state, nextPath, req);
+  return res.redirect(buildGoogleAuthUrl(state, redirectUri));
 });
 
 async function handleGoogleCallback(req, res) {
@@ -56,7 +58,8 @@ async function handleGoogleCallback(req, res) {
   }
 
   try {
-    const tokens = await exchangeCodeForTokens(code);
+    const redirectUri = resolveGoogleRedirectUri(req);
+    const tokens = await exchangeCodeForTokens(code, redirectUri);
     const profile = await fetchGoogleUserProfile(tokens.access_token);
     const dbUser = upsertGoogleUser(profile);
 
@@ -71,7 +74,7 @@ async function handleGoogleCallback(req, res) {
       loginAt: new Date().toISOString(),
     };
 
-    setSessionCookie(res, sessionUser);
+    setSessionCookie(res, sessionUser, req);
     return res.redirect(consumed.next || '/');
   } catch (error) {
     console.error('[LabFis Auth] Google OAuth callback error:', error?.message || error);
@@ -113,7 +116,7 @@ router.post('/api/auth/login', (req, res) => {
     loginAt: new Date().toISOString(),
   };
 
-  setSessionCookie(res, sessionUser);
+  setSessionCookie(res, sessionUser, req);
 
   return res.status(200).json({
     ok: true,
@@ -132,7 +135,7 @@ router.get('/api/auth/me', (req, res) => {
 });
 
 router.post('/api/auth/logout', (req, res) => {
-  clearSessionCookie(res);
+  clearSessionCookie(res, req);
   return res.status(200).json({ ok: true });
 });
 

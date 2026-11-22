@@ -1,0 +1,58 @@
+{
+  "version": 2,
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "{data/**,public/**}"
+    }
+  },
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    },
+    {
+      "source": "/manifest.json",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json; charset=utf-8"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/auth/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/login",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/pinjam",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/profil",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/",
+      "destination": "/api/index.js"
+    }
+  ]
+}
